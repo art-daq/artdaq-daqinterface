@@ -538,6 +538,9 @@ class DAQInterface(Component):
 
         self.partition_number = partition_number
         self.default_transfer = "TCPSocket"
+        self.br_transfer = None
+        self.eb_transfer = None
+        self.dl_transfer = None
         self.rpc_port = rpc_port
 
         self.boardreader_priorities = None
