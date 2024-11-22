@@ -537,7 +537,7 @@ class DAQInterface(Component):
         self.reset_variables()
 
         self.partition_number = partition_number
-        self.transfer = "Autodetect"
+        self.default_transfer = "TCPSocket"
         self.rpc_port = rpc_port
 
         self.boardreader_priorities = None
@@ -1102,7 +1102,13 @@ class DAQInterface(Component):
                 if self.data_directory_override[-1] != "/":
                     self.data_directory_override = self.data_directory_override + "/"
             elif "transfer_plugin_to_use" in line or "transfer plugin to use" in line:
-                self.transfer = line.split()[-1].strip()
+                self.default_transfer = line.split()[-1].strip()
+            elif "transfer_plugin_from_brs" in line or "transfer plugin from brs" in line:
+                self.br_transfer = line.split()[-1].strip()
+            elif "transfer_plugin_from_ebs" in line or "transfer plugin from ebs" in line:
+                self.eb_transfer = line.split()[-1].strip()
+            elif "transfer_plugin_from_dls" in line or "transfer plugin from dls" in line:
+                self.dl_transfer = line.split()[-1].strip()            
             elif "allowed_processors" in line or "allowed processors" in line:
                 self.allowed_processors = line.split()[-1].strip()
             elif "max_launch_checks" in line or "max launch checks" in line:
@@ -1179,6 +1185,13 @@ class DAQInterface(Component):
             self.boardreader_priorities_on_config = self.boardreader_priorities
             self.boardreader_priorities_on_start = self.boardreader_priorities
             self.boardreader_priorities_on_stop = self.boardreader_priorities
+
+        if self.br_transfer is None:
+            self.br_transfer = self.default_transfer
+        if self.eb_transfer is None:
+            self.eb_transfer = self.default_transfer
+        if self.dl_transfer is None:
+            self.dl_transfer = self.default_transfer
 
     def check_proc_transition(self, target_state):
 

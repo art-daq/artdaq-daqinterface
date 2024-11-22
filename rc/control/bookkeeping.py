@@ -443,6 +443,14 @@ def bookkeeping_for_fhicl_documents_artdaq_v3_base(self):
             ):
                 hms = ""
 
+            transfer_to_use = self.default_transfer
+            if "BoardReader" in procinfo.name or procinfo_for_string.name == "BoardReader":
+                transfer_to_use = self.br_transfer
+            if "EventBuilder" in procinfo.name or procinfo_for_string.name == "EventBuilder":
+                transfer_to_use = self.eb_transfer
+            if "DataLogger" in procinfo.name or procinfo_for_string.name == "DataLogger":
+                transfer_to_use = self.dl_transfer
+
             if nodetype == "sources" and "EventBuilder" in procinfo.name:
                 if procinfo_for_string.name == "BoardReader":
                     if self.advanced_memory_usage:
@@ -472,7 +480,7 @@ def bookkeeping_for_fhicl_documents_artdaq_v3_base(self):
                 % (
                     prefix,
                     procinfo_for_string.rank,
-                    self.transfer,
+                    transfer_to_use,
                     nodetype[:-1],
                     procinfo_for_string.rank,
                     buffer_size_words,
