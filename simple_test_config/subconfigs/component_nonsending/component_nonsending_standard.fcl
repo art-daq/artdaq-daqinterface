@@ -25,13 +25,10 @@ component_nonsending_standard: {
 }
 
 component2001_nonsending_standard: @local::component_nonsending_standard
-component2001_nonsending_standard.fragment_receiver.board_id: 2001
 
 component2002_nonsending_standard: @local::component_nonsending_standard
-component2002_nonsending_standard.fragment_receiver.board_id: 2002
 
 component2003_nonsending_standard: @local::component_nonsending_standard
-component2003_nonsending_standard.fragment_receiver.board_id: 2003
 
 
 

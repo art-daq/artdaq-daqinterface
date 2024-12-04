@@ -15,18 +15,14 @@ felix_daq_standard.fragment_receiver.max_fragment_size_bytes: 30300 # 5000 times
 felix_daq_standard.fragment_receiver.distribution_type: 3
 felix_daq_standard.fragment_receiver.random_seed: 738
 felix_daq_standard.fragment_receiver.fragment_id: 101
-felix_daq_standard.fragment_receiver.board_id: 1
 
 felix01_daq_standard: @local::felix_daq_standard
 felix01_daq_standard.fragment_receiver.fragment_id: 101
-felix01_daq_standard.fragment_receiver.board_id: 1
 
 felix02_daq_standard: @local::felix_daq_standard
 felix02_daq_standard.fragment_receiver.fragment_id: 102
-felix02_daq_standard.fragment_receiver.board_id: 2
 
 felix03_daq_standard: @local::felix_daq_standard
 felix03_daq_standard.fragment_receiver.fragment_id: 103
-felix03_daq_standard.fragment_receiver.board_id: 3
 
 END_PROLOG

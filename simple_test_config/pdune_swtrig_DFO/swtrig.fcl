@@ -10,5 +10,4 @@ daq.fragment_receiver.nADCcounts: 40
 daq.fragment_receiver.max_fragment_size_bytes: 200
 daq.fragment_receiver.distribution_type: 3
 daq.fragment_receiver.fragment_id: 1
-daq.fragment_receiver.board_id: 1
 daq.fragment_receiver.random_seed: 8250

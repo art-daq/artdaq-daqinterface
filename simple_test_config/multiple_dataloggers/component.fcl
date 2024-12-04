@@ -19,7 +19,6 @@ component_standard: {
         generator: ToySimulator
 	  fragment_type: TOY1
 	  fragment_id: 0
-	  board_id: 0
 	  starting_fragment_id: 0
 	  random_seed: 8250
 	  sleep_on_stop_us: 500000 
@@ -40,28 +39,24 @@ component_standard: {
 component01_standard: @local::component_standard
 component01_standard.fragment_receiver.fragment_type: TOY1
 component01_standard.fragment_receiver.fragment_id: 0
-component01_standard.fragment_receiver.board_id: 0
 component01_standard.fragment_receiver.starting_fragment_id: 0
 component01_standard.fragment_receiver.random_seed: 8250
 
 component02_standard: @local::component_standard
 component02_standard.fragment_receiver.fragment_type: TOY2
 component02_standard.fragment_receiver.fragment_id: 1
-component02_standard.fragment_receiver.board_id: 1
 component02_standard.fragment_receiver.starting_fragment_id: 1
 component02_standard.fragment_receiver.random_seed: 2899
 
 component03_standard: @local::component_standard
 component03_standard.fragment_receiver.fragment_type: TOY1
 component03_standard.fragment_receiver.fragment_id: 2
-component03_standard.fragment_receiver.board_id: 2
 component03_standard.fragment_receiver.starting_fragment_id: 2
 component03_standard.fragment_receiver.random_seed: 4567
 
 component04_standard: @local::component_standard
 component04_standard.fragment_receiver.fragment_type: TOY2
 component04_standard.fragment_receiver.fragment_id: 3
-component04_standard.fragment_receiver.board_id: 3
 component04_standard.fragment_receiver.starting_fragment_id: 3
 component04_standard.fragment_receiver.random_seed: 1206
 

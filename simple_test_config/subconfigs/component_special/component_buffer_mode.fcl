@@ -3,5 +3,4 @@
 daq: @local::component1001_pull_standard
 daq.fragment_receiver.fragment_id: 3005
 daq.fragment_receiver.starting_fragment_id: 3005
-daq.fragment_receiver.board_id: 3005
 daq.fragment_receiver.request_mode: "Buffer"

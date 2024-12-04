@@ -3,6 +3,5 @@
 daq: @local::component01_push_standard
 daq.fragment_receiver.fragment_id: 3006
 daq.fragment_receiver.starting_fragment_id: 3006
-daq.fragment_receiver.board_id: 3006
 daq.fragment_receiver.exception_on_config: true
 

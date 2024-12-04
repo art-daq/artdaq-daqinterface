@@ -6,7 +6,6 @@ pushModeBR_daq_standard: {
     request_mode: "Ignored" # Possible values are: Ignored, Single, Buffer, Window
     separate_data_thread: false
     fragment_id: 101
-    board_id: 1
 
     destinations: { }
   }

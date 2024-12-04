@@ -3,6 +3,5 @@
 daq: @local::component01_push_standard
 daq.fragment_receiver.fragment_id: 0
 daq.fragment_receiver.starting_fragment_id: 0
-daq.fragment_receiver.board_id: 0
 daq.fragment_receiver.rollover_subrun_interval: 1
 daq.fragment_receiver.usecs_between_sends: 10000000

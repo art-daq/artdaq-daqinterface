@@ -3,6 +3,5 @@
 daq: @local::component01_push_standard
 daq.fragment_receiver.fragment_id: 3001
 daq.fragment_receiver.starting_fragment_id: 3001
-daq.fragment_receiver.board_id: 3001
 daq.fragment_receiver.exit_after_N_seconds: true
 daq.fragment_receiver.change_after_N_seconds: 30

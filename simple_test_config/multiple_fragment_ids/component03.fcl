@@ -55,7 +55,6 @@
 	                 4, 
 					 5]
 	  generated_fragments_per_event: 3
-	  board_id: 1
 	  starting_fragment_id: 1
 	  random_seed: 2899
 	  sleep_on_stop_us: 500000 
