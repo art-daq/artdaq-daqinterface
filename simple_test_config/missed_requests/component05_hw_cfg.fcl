@@ -12,7 +12,6 @@ sleep_on_stop_us: 0
     generator: ToySimulator
     fragment_type: TOY2
     fragment_id: 4
-    board_id: 4
     starting_fragment_id: 4
     random_seed: 4738
     sleep_on_stop_us: 500000 

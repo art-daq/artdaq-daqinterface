@@ -32,7 +32,6 @@ hardware_poll_interval_us: 0 # How often, in microseconds, checkHWStatus_() shou
     generator: AsciiSimulator
     fragment_type: ASCII
     fragment_id: 0
-    board_id: 0
     starting_fragment_id: 0
     random_seed: 5759
     sleep_on_stop_us: 500000 

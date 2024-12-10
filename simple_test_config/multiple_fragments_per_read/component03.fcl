@@ -9,12 +9,10 @@ daq: {
          4,
          5
       ]
-            board_id: 2
       generated_fragments_per_event: 3
       generator: "CompositeDriver"
       generator_config_list: [
          {
-            board_id: 2
             distribution_type: 0
             fragment_id: 3
             fragment_type: "TOY2"
@@ -30,7 +28,6 @@ daq: {
             timestamp_scale_factor: 1
          },
          {
-            board_id: 2
             distribution_type: 1
             fragment_id: 4
             fragment_type: "TOY2"
@@ -46,7 +43,6 @@ daq: {
             timestamp_scale_factor: 1
          },
          {
-            board_id: 2
             distribution_type: 2
             fragment_id: 5
             fragment_type: "TOY2"

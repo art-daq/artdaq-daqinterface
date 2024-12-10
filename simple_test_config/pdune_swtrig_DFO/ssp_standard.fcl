@@ -16,18 +16,14 @@ ssp_daq_standard.fragment_receiver.max_fragment_size_bytes: 6664 # 300 times 2 (
 ssp_daq_standard.fragment_receiver.distribution_type: 3
 ssp_daq_standard.fragment_receiver.random_seed: 738
 ssp_daq_standard.fragment_receiver.fragment_id: 101
-ssp_daq_standard.fragment_receiver.board_id: 1
 
 ssp01_daq_standard: @local::ssp_daq_standard
 ssp01_daq_standard.fragment_receiver.fragment_id: 201
-ssp01_daq_standard.fragment_receiver.board_id: 11
 
 ssp02_daq_standard: @local::ssp_daq_standard
 ssp02_daq_standard.fragment_receiver.fragment_id: 202
-ssp02_daq_standard.fragment_receiver.board_id: 12
 
 ssp03_daq_standard: @local::ssp_daq_standard
 ssp03_daq_standard.fragment_receiver.fragment_id: 203
-ssp03_daq_standard.fragment_receiver.board_id: 13
 
 END_PROLOG

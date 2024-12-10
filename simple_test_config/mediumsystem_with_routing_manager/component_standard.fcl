@@ -10,7 +10,6 @@ component_standard: {
 	generator: ToySimulator
 	fragment_type: TOY2
 	fragment_id: 1
-	board_id: 1
 	starting_fragment_id: 1
 	random_seed: 1738
 	sleep_on_stop_us: 500000 
@@ -90,7 +89,6 @@ hardware_poll_interval_us: 0 # How often, in microseconds, checkHWStatus_() shou
 component01_standard: @local::component_standard
 component01_standard.fragment_receiver.fragment_type: TOY1
 component01_standard.fragment_receiver.fragment_id: 0
-component01_standard.fragment_receiver.board_id: 0
 component01_standard.fragment_receiver.starting_fragment_id: 0
 component01_standard.fragment_receiver.random_seed: 9079
 component01_standard.fragment_receiver.request_mode: "Ignored"
@@ -102,63 +100,54 @@ component01_standard.fragment_receiver.max_fragment_size_bytes: 4096 # nADCcount
 component02_standard: @local::component_standard
 component02_standard.fragment_receiver.fragment_type: TOY2
 component02_standard.fragment_receiver.fragment_id: 1
-component02_standard.fragment_receiver.board_id: 1
 component02_standard.fragment_receiver.starting_fragment_id: 1
 component02_standard.fragment_receiver.random_seed: 1738
 
 component03_standard: @local::component_standard
 component03_standard.fragment_receiver.fragment_type: TOY2
 component03_standard.fragment_receiver.fragment_id: 2
-component03_standard.fragment_receiver.board_id: 2
 component03_standard.fragment_receiver.starting_fragment_id: 2
 component03_standard.fragment_receiver.random_seed: 2738
 
 component04_standard: @local::component_standard
 component04_standard.fragment_receiver.fragment_type: TOY2
 component04_standard.fragment_receiver.fragment_id: 3
-component04_standard.fragment_receiver.board_id: 3
 component04_standard.fragment_receiver.starting_fragment_id: 3
 component04_standard.fragment_receiver.random_seed: 3738
 
 component05_standard: @local::component_standard
 component05_standard.fragment_receiver.fragment_type: TOY2
 component05_standard.fragment_receiver.fragment_id: 4
-component05_standard.fragment_receiver.board_id: 4
 component05_standard.fragment_receiver.starting_fragment_id: 4
 component05_standard.fragment_receiver.random_seed: 4738
 
 component06_standard: @local::component_standard
 component06_standard.fragment_receiver.fragment_type: TOY2
 component06_standard.fragment_receiver.fragment_id: 5
-component06_standard.fragment_receiver.board_id: 5
 component06_standard.fragment_receiver.starting_fragment_id: 5
 component06_standard.fragment_receiver.random_seed: 5738
 
 component07_standard: @local::component_standard
 component07_standard.fragment_receiver.fragment_type: TOY2
 component07_standard.fragment_receiver.fragment_id: 6
-component07_standard.fragment_receiver.board_id: 6
 component07_standard.fragment_receiver.starting_fragment_id: 6
 component07_standard.fragment_receiver.random_seed: 6738
 
 component08_standard: @local::component_standard
 component08_standard.fragment_receiver.fragment_type: TOY2
 component08_standard.fragment_receiver.fragment_id: 7
-component08_standard.fragment_receiver.board_id: 7
 component08_standard.fragment_receiver.starting_fragment_id: 7
 component08_standard.fragment_receiver.random_seed: 7738
 
 component09_standard: @local::component_standard
 component09_standard.fragment_receiver.fragment_type: TOY2
 component09_standard.fragment_receiver.fragment_id: 8
-component09_standard.fragment_receiver.board_id: 8
 component09_standard.fragment_receiver.starting_fragment_id: 8
 component09_standard.fragment_receiver.random_seed: 8738
 
 component10_standard: @local::component_standard
 component10_standard.fragment_receiver.fragment_type: TOY2
 component10_standard.fragment_receiver.fragment_id: 9
-component10_standard.fragment_receiver.board_id: 9
 component10_standard.fragment_receiver.starting_fragment_id: 9
 component10_standard.fragment_receiver.random_seed: 9738
 
