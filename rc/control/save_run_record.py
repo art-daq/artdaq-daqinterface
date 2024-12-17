@@ -7,6 +7,7 @@ from subprocess import Popen
 import traceback
 import shutil
 import string
+import socket
 
 from rc.control.utilities import make_paragraph
 from rc.control.utilities import get_commit_info
@@ -110,7 +111,7 @@ def save_run_record_base(self):
         for procinfo in procinfos_sorted_by_rank:
             host = procinfo.host
             if host == "localhost":
-                host = os.environ["HOSTNAME"]
+                host = socket.gethostname()
             ranksfile.write(
                 "%-29s %-9s %-19s %-14s %-9d\n"
                 % (
@@ -153,12 +154,12 @@ def save_run_record_base(self):
         outf.write("Component #%d: %s\n" % (i_comp, component))
 
     outf.write(
-        "DAQInterface directory: %s:%s\n" % (os.environ["HOSTNAME"], os.getcwd())
+        "DAQInterface directory: %s:%s\n" % (socket.gethostname(), os.getcwd())
     )
     outf.write(
         "DAQInterface logfile: %s:%s\n"
         % (
-            os.environ["HOSTNAME"],
+            socket.gethostname(),
             expand_environment_variable_in_string(os.environ["DAQINTERFACE_LOGFILE"]),
         )
     )
