@@ -1179,12 +1179,6 @@ def bookkeeping_for_fhicl_documents_artdaq_v3_base(self):
 
         return False
 
-    def art_analyzer_count(procinfo):
-        res = re.search(r"\s*art_analyzer_count\s*:\s*([0-9\.e]+)", procinfo.fhicl_used)
-        if res:
-            return int(float(res.group(1)))
-        return 1
-
     for subsystem_id, subsystem in self.subsystems.items():
 
         init_fragment_counts = {}
@@ -1206,7 +1200,7 @@ def bookkeeping_for_fhicl_documents_artdaq_v3_base(self):
                             if sends_to_via_RootNetOutput(
                                 possible_sender_procinfo, procinfo
                             ):
-                                init_fragment_count += art_analyzer_count(possible_sender_procinfo)
+                                init_fragment_count += 1
                 elif procinfo.name == "DataLogger":
                     for possible_sender_procinfo in [
                         pi
@@ -1217,7 +1211,7 @@ def bookkeeping_for_fhicl_documents_artdaq_v3_base(self):
                         if sends_to_via_RootNetOutput(
                             possible_sender_procinfo, procinfo
                         ):
-                            init_fragment_count += art_analyzer_count(possible_sender_procinfo)
+                            init_fragment_count += 1
                 elif procinfo.name == "Dispatcher":
                     for possible_sender_procinfo in [
                         pi
@@ -1228,7 +1222,7 @@ def bookkeeping_for_fhicl_documents_artdaq_v3_base(self):
                         if sends_to_via_RootNetOutput(
                             possible_sender_procinfo, procinfo
                         ):
-                            init_fragment_count += art_analyzer_count(possible_sender_procinfo)
+                            init_fragment_count += 1
                     if (
                         init_fragment_count == 0
                     ):  # Dispatcher will _always_ receive init Fragments, this probably means we're running without DataLoggers
@@ -1241,7 +1235,7 @@ def bookkeeping_for_fhicl_documents_artdaq_v3_base(self):
                             if sends_to_via_RootNetOutput(
                                 possible_sender_procinfo, procinfo
                             ):
-                                init_fragment_count += art_analyzer_count(possible_sender_procinfo)
+                                init_fragment_count += 1
 
                 init_fragment_counts[procinfo.name] = init_fragment_count
 
