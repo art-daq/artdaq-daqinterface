@@ -23,7 +23,7 @@ setupscript=$recorddir/$runnum/setup.txt
 if [[ -e $setupscript ]]; then
 
     if [[ -n $PRODUCTS ]]; then
-	
+
 	ups_is_setup=false  # Needed for unset function
 
 	for proddir in $( echo $PRODUCTS | tr ":" "\n" ) ; do
@@ -33,7 +33,7 @@ if [[ -e $setupscript ]]; then
 		ups_is_setup=true
 	    fi
 	done
-	
+
 	if ! $ups_is_setup ; then
 	    echo "Unable set up product \"ups\" given products directories $PRODUCTS. ups is needed for the unsetup function, so will exit..." >&2
 	    exit 100
@@ -57,11 +57,11 @@ if [[ -e $setupscript ]]; then
 	echo "Nonzero value returned by source of ${setupscript}; exiting..."
 	exit 60
     fi
-    
+
     echo
     echo "Sourced $setupscript"
 
-else 
+else
 
     echo "WARNING: unable to find setup script originally used for run $runnum (looked for ${setupscript}); will try to set up art with package_setup.sh" >&2
 
@@ -102,7 +102,7 @@ EOF
 
 
     exit 20
-fi 
+fi
 
 if [[ -z $( which config_dumper ) ]]; then
     echo
@@ -119,7 +119,7 @@ test"
 
 set -o pipefail   # See, e.g., https://stackoverflow.com/questions/1221833/pipe-output-and-capture-exit-status-in-bash
 
-config_dumper -P $rootfile 2> /dev/null | sed -r 's/\\n/\n/g'  | sed -r '1,/boot: "contents/d;/^\s*\\"\s*$/,$d;s/\\"/"/g'  > $temporary_daqinterface_boot_file 
+config_dumper -P $rootfile 2> /dev/null | sed -r 's/\\n/\n/g'  | sed -r '1,/boot: "contents/d;/^\s*\\"\s*$/,$d;s/\\"/"/g'  > $temporary_daqinterface_boot_file
 
 if [[ "$?" != "0" ]]; then
     echo "An error occurred in the config_dumper pipe command, aborting..."
@@ -127,10 +127,10 @@ if [[ "$?" != "0" ]]; then
 fi
 
 if [[ ! -s $temporary_daqinterface_boot_file ]]; then
-    echo "It appears no DAQInterface boot info was saved in $rootfile" 
+    echo "It appears no DAQInterface boot info was saved in $rootfile"
 fi
 
-config_dumper -P $rootfile 2> /dev/null  | sed -r 's/\\n/\n/g;s/\\"/"/g'  | sed -r '1,/metadata: "contents/d;/^\s*"\s*$/,$d' > $temporary_metadata_file 
+config_dumper -P $rootfile 2> /dev/null  | sed -r 's/\\n/\n/g;s/\\"/"/g'  | sed -r '1,/metadata: "contents/d;/^\s*"\s*$/,$d' > $temporary_metadata_file
 
 if [[ "$?" != "0" ]]; then
     echo "An error occurred in the config_dumper pipe command, aborting..."
@@ -138,7 +138,7 @@ if [[ "$?" != "0" ]]; then
 fi
 
 if [[ ! -s $temporary_metadata_file ]]; then
-    echo "It appears no metadata info was saved in $rootfile" 
+    echo "It appears no metadata info was saved in $rootfile"
 fi
 
 run_records_boot_file=$recorddir/$runnum/boot.txt
@@ -180,7 +180,7 @@ if [[ -n $res_boot ]]; then
     echo $res_boot
     echo "DAQInterface boot file info inconsistent between $rootfile and $recorddir/$runnum (see above for diff)"
 fi
- 
+
 if [[ -n $res_metadata ]]; then
     echo $res_metadata
     echo "Metadata file info inconsistent between $rootfile and $recorddir/$runnum (see above for diff)"

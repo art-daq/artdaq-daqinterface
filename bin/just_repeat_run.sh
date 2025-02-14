@@ -14,12 +14,12 @@ if [[ -n $3 && $3 =~ nostrict ]]; then
     nostrict=true
 fi
 
-if ! [[ "$runnum" =~ ^[0-9]+$ ]] ; then 
+if ! [[ "$runnum" =~ ^[0-9]+$ ]] ; then
     echo "Run number argument \"$runnum\" does not appear to be an integer; exiting..." >&2
     exit 1
 fi
 
-if ! [[ "$seconds_to_run" =~ ^[0-9]+$ ]] ; then 
+if ! [[ "$seconds_to_run" =~ ^[0-9]+$ ]] ; then
     echo "seconds-to-run argument \"$seconds_to_run\" does not appear to be an integer; exiting..." >&2
     exit 1
 fi
@@ -28,7 +28,7 @@ fi
 . $ARTDAQ_DAQINTERFACE_DIR/bin/diagnostic_tools.sh
 
 if $nostrict ; then
-    
+
     cat<<EOF
 
 The "--nostrict" option has been requested; will ignore the following:
@@ -56,9 +56,9 @@ fi
 daq_setup_script=$( sed -r -n 's/^\s*DAQ\s+setup\s+script\s*:\s*(\S+).*$/\1/p' $recorddir/$runnum/boot.txt )
 
 if [[ ! -e $daq_setup_script ]]; then
-    cat >&2 <<EOF 
+    cat >&2 <<EOF
 
-Can't find DAQ setup script "$daq_setup_script" 
+Can't find DAQ setup script "$daq_setup_script"
 listed in boot file for run $runnum ($recorddir/$runnum/boot.txt);
 exiting...
 
@@ -71,11 +71,11 @@ deviation_found=false
 echo
 echo -n "Checking that code is the same as was used in run $runnum..."
 res=$( check_code_changes_since_run.sh $runnum )
-   
+
 if [[ -n $res ]]; then
-	
+
     check_code_changes_since_run.sh $runnum
-	
+
     cat<<EOF >&2
 
 The code in the installation area which was used for run $runnum
@@ -107,7 +107,7 @@ DAQInterface on your partition and execute the following two commands:
 cp $recorddir/$runnum/known_boardreaders_list.txt /tmp/known_boardreaders_list.txt
 export DAQINTERFACE_KNOWN_BOARDREADERS_LIST=/tmp/known_boardreaders_list.txt
 
-and then relaunch DAQInterface. 
+and then relaunch DAQInterface.
 
 EOF
 
@@ -122,7 +122,7 @@ daqinterface_host_from_run=$( sed -r -n 's/DAQInterface directory: ([^:]+).*/\1/
 current_daqinterface_host=$( hostname )
 
 if [[ $current_daqinterface_host != $daqinterface_host_from_run ]]; then
-	
+
     cat<<EOF >&2
 
 A difference was found between the host DAQInterface was run on for
@@ -135,7 +135,7 @@ unlike run $runnum. Unless you're running this script with the
 proceed.
 
 EOF
-	
+
     deviation_found=true
 else
     echo "done."

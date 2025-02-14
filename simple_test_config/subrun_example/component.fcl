@@ -6,7 +6,7 @@ BEGIN_PROLOG
 
 component_standard: {
   fragment_receiver: {
-	# CommandableFragmentGenerator Configuration: 
+	# CommandableFragmentGenerator Configuration:
 	fragment_ids: []
 	fragment_id: -99 # Please define only one of these
 
@@ -21,7 +21,7 @@ component_standard: {
 	  fragment_id: 0
 	  starting_fragment_id: 0
 	  random_seed: 8250
-	  sleep_on_stop_us: 500000 
+	  sleep_on_stop_us: 500000
 	  nADCcounts: 40
 	  max_fragment_size_bytes: 200
 	  throttle_usecs: 100000

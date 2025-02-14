@@ -616,7 +616,7 @@ class DAQInterface(Component):
                 config_str = "application_name: DAQInterface"
                 if self.debug_level > 0:
                     config_str += " debug_logging: true"
-                
+
                 self.messageviewer_sender = swig_artdaq(config_str)
             except:
                 pass
@@ -1111,7 +1111,7 @@ class DAQInterface(Component):
             elif "transfer_plugin_from_ebs" in line or "transfer plugin from ebs" in line:
                 self.eb_transfer = line.split()[-1].strip()
             elif "transfer_plugin_from_dls" in line or "transfer plugin from dls" in line:
-                self.dl_transfer = line.split()[-1].strip()            
+                self.dl_transfer = line.split()[-1].strip()
             elif "allowed_processors" in line or "allowed processors" in line:
                 self.allowed_processors = line.split()[-1].strip()
             elif "max_launch_checks" in line or "max launch checks" in line:
@@ -2059,7 +2059,7 @@ class DAQInterface(Component):
                 "%s ; . %s; spack find --loaded | sed -r -n 's/^(%s)@(\\S+).*/\\1 \\2/p'" % (
                     ";".join(get_setup_commands(self.productsdir, self.spackdir)),
                     self.daq_setup_script,
-                    "|".join(needed_packages),                
+                    "|".join(needed_packages),
                 )
             )
 

@@ -4,7 +4,7 @@ routing_table_config: {
    # routing_retry_count is the number of times to retry calculating destination before giving up (DROPPING DATA!)
    routing_retry_count: 5
 
-   # routing_timeout_ms is the number of milliseconds to wait for a routing table update if the table is exhausted 
+   # routing_timeout_ms is the number of milliseconds to wait for a routing table update if the table is exhausted
    routing_timeout_ms: 2000
 
    # Don't touch this; DAQInterface will set it

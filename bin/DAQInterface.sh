@@ -7,7 +7,7 @@ if [[ -n $1 ]]; then
     else
        echo "Unknown option passed to DAQInterface!"
        exit 1
-    fi 
+    fi
 fi
 
 
@@ -34,7 +34,7 @@ if [[ -z $( ps aux | grep "$DAQINTERFACE_TTY.*tail -n0 -f $expanded_daqinterface
 
 fi
 
-nohup stdbuf -oL $ARTDAQ_DAQINTERFACE_DIR/rc/control/daqinterface.py --partition-number $DAQINTERFACE_PARTITION_NUMBER --rpc-port $DAQINTERFACE_PORT <&- >> $expanded_daqinterface_logfilename 2>&1 
+nohup stdbuf -oL $ARTDAQ_DAQINTERFACE_DIR/rc/control/daqinterface.py --partition-number $DAQINTERFACE_PARTITION_NUMBER --rpc-port $DAQINTERFACE_PORT <&- >> $expanded_daqinterface_logfilename 2>&1
 
 pid=$( ps aux | grep "$DAQINTERFACE_TTY.*tail -n0 -f $expanded_daqinterface_logfilename" | grep -v grep | awk '{print $2}' )
 

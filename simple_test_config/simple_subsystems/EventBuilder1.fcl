@@ -32,14 +32,14 @@ daq: {
 	  uniquify: true
 	}
   }
-} 
+}
 
 outputs: {
   rootNetOutput: {
     module_type: RootNetOutput
     #SelectEvents: { SelectEvents: [ pmod2,pmod3 ] }
     #broadcast_sends: true
-	destinations: {	}	
+	destinations: {	}
   }
   binaryNetOutput: {
     module_type: BinaryNetOutput
@@ -65,7 +65,7 @@ physics: {
     toy1Integ: {
       module_type: CheckIntegrity
       raw_data_label: "daq"
-      frag_type: "TOY1"      
+      frag_type: "TOY1"
     }
     toy2Integ: {
       module_type: CheckIntegrity
@@ -92,7 +92,7 @@ physics: {
 
   pmod2: [ prescaleMod2 ]
   pmod3: [ prescaleMod3 ]
-   
+
   a1: [ toy1Integ, toy2Integ ]
   my_output_modules2: [ binaryNetOutput ]
   my_output_modules: [ rootNetOutput ]

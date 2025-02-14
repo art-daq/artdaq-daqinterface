@@ -19,7 +19,7 @@ Some notes:
   to run this demo, you can use the following commands:
   - 'cd <yourArtdaqDemoInstallationDir>'
   - 'sh ./run_demo.sh --config subrun_example --bootfile `pwd`/artdaq-utilities-daqinterface/simple_test_config/subrun_example/boot.txt'
-  - or 
+  - or
   - 'sh ./run_demo.sh --config subrun_example --bootfile `pwd`/artdaq-utilities-daqinterface/simple_test_config/subrun_example/boot.txt --comps component01 component02 component03 --'
 
 

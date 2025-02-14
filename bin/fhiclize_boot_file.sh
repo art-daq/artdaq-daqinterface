@@ -48,7 +48,7 @@ fi
 tmpfile=$( mktemp )
 cat $bootfile | awk -f $ARTDAQ_DAQINTERFACE_DIR/utils/fhiclize_boot_file.awk > $tmpfile
 
-fhicl-dump -l 0 -c $tmpfile 
+fhicl-dump -l 0 -c $tmpfile
 
 if [[ "$?" != "0" ]]; then
     cat<<EOF >&2

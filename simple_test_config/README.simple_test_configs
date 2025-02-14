@@ -18,7 +18,7 @@ additional information about the configuration.
 ascii_simulator_example:
 
 Demonstrates the AsciiSimulator_generator class and the AsciiDump
-ART module. This module can be used to verify ARTDAQ's data 
+ART module. This module can be used to verify ARTDAQ's data
 preservation: AsciiSimulator can write a raw ASCII file which can be
 compared with the output of AsciiDump; they will be identical.
 
@@ -83,7 +83,7 @@ multiple_art_processes_example:
 
 A version of the "demo" configuration where each Data Receiver
 (EventBuilder, DataLogger, and Dispatcher) runs 5 subordinate art
-processes. 
+processes.
 
 =====================================================================
 
@@ -115,7 +115,7 @@ TODO: Describe this configuration or remove it!!!
 request_based_dataflow_example:
 
 Demonstrates the Data Request capabilities of the CommandableFragmentGenerator
-class. This example consists of a "DAQ" BoardReader reading out at a 
+class. This example consists of a "DAQ" BoardReader reading out at a
 high rate, a "DCS" BoardReader which reads out very slowly,
 but sends data for each event the "DAQ" BoardReader generates, and
 a "CRV" BoardReader which samples uncorrelated data based
@@ -139,7 +139,7 @@ a given time window around the "DAQ" events.
         for controlling the output interface for the multicasts. This
         parameter defaults to pick the first interface which will
         be OK for a single node demo.
-        
+
         One additional "gotcha" may be that multiple users have
         tried to run the demos on the same system. As root:
 

@@ -2,11 +2,11 @@ BEGIN_PROLOG
 
 windowModeBR_daq_standard: {
   fragment_receiver: {
-    sleep_on_stop_us: 500000 
+    sleep_on_stop_us: 500000
     fragment_id: 101
 
     request_mode: "Window" # Possible values are: Ignored, Single, Buffer, Window
-    end_of_run_quiet_timeout_ms: 1000 # Time, in milliseconds, that the entire system must be quiet for check_stop to return true in request mode. 
+    end_of_run_quiet_timeout_ms: 1000 # Time, in milliseconds, that the entire system must be quiet for check_stop to return true in request mode.
 
     data_buffer_depth_fragments: 1000
     data_buffer_depth_mb: 1000

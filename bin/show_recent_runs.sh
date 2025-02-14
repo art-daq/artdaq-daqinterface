@@ -21,7 +21,7 @@ nruns=$1
 echo
 
 for dir in $( ls -tr1 $recorddir | tail -$nruns  ); do
-    
+
     metadata_file=$recorddir/$dir/metadata.txt
 
     if [[  -e $metadata_file ]]; then

@@ -21,7 +21,7 @@ daq: {
       sources: {}
 }
 
-  #include "metrics_for_aggregators.fcl" 
+  #include "metrics_for_aggregators.fcl"
 }
 outputs: {}
 physics: {}

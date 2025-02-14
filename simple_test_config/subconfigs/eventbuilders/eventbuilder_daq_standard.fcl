@@ -8,7 +8,7 @@ eventbuilder_daq_standard: {
 
       # During shutdown, shared memory will wait for expected_art_event_processing_time_us microseconds while it is checking that the art threads are done reading buffers.
       expected_art_event_processing_time_us: 2e6
-     
+
       expected_fragments_per_event: 0       # Don't touch this; DAQInterface will set it
 
 
@@ -29,7 +29,7 @@ multicast_interface_ip: "0.0.0.0"
       #include "routing_for_eventbuilders.fcl"
 }
 
-   #include "metrics_for_eventbuilders.fcl"    
+   #include "metrics_for_eventbuilders.fcl"
 }
 
 END_PROLOG

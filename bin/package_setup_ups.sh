@@ -33,13 +33,13 @@ proddir=`$ARTDAQ_DAQINTERFACE_DIR/rc/control/utilities.py upsproddir_from_produc
 
 if [[ -n $proddir ]]; then
 
-    . $proddir/setup 
+    . $proddir/setup
 
     if [[ "$?" != "0" ]]; then
 	echo -e "\n\nCommand will not work: attempted setup of $proddir failed" >&2
 	return 50
     fi
-    
+
     num_packages=$(ups list -aK+ $packagename | wc -l )
 
     if (( $num_packages == 0 )); then
@@ -73,8 +73,8 @@ if [[ -n $proddir ]]; then
 
         DEVELOPER ERROR: package_setup.sh shouldn't be sourced twice
         in the same environment as its first action is to unsetup any
-        previously-set-up ups package. Please contact the 
-        artdaq-developers@fnal.gov mailing list. 
+        previously-set-up ups package. Please contact the
+        artdaq-developers@fnal.gov mailing list.
 
 EOF
 	return 1

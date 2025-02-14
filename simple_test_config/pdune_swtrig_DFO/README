@@ -8,13 +8,13 @@ from BoardReaders to EventBuilders.
 
 Some notes:
 * This configuration needs an enhanced copy of the boot.txt file, and a
-  sample is included with this configuration.  It also needs a special 
+  sample is included with this configuration.  It also needs a special
   known_boardreaders_list, and that is also provided here.
   To run this demo, you can use the following commands:
   - 'cd <yourArtdaqDemoDir>'
   - 'sh ./run_demo.sh --config pdune_swtrig_DFO --bootfile `pwd`/artdaq-utilities-daqinterface/simple_test_config/pdune_swtrig_DFO/boot.txt --comps swtrig felix01 felix02 felix03 ssp01 ssp02 ssp03 --brlist `pwd`/artdaq-utilities-daqinterface/simple_test_config/pdune_swtrig_DFO/known_boardreaders_list_example [--runduration 40 --partition 0 --no_om]'
 
-* NOTE that the pull-mode data requests that are used in this sample make use of 
+* NOTE that the pull-mode data requests that are used in this sample make use of
   multicast Ethernet messages.  As such, there may
   be firewall settings that need to be tuned.  Please see the text that describes
   this in ../README.simple_test_configs.

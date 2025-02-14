@@ -3,10 +3,10 @@ Notes on 16-June-2020, ELF
 
 Description:
 This configuration is intended to emulate the Mu2e TDAQ environment. It
-consists of component_trkcal01, component_trkcal02, EventFilter1, 
+consists of component_trkcal01, component_trkcal02, EventFilter1,
 EventFilter2, and RoutingManager1 in subsystem 1, component_crv01, EventBuilder1,
 DataLogger1, and Dispatcher1 in subsystem2. The TRK+CAL components each
-generate ToyFragments that are sent to the EventFilters, 
+generate ToyFragments that are sent to the EventFilters,
 which run RandomDelayFilter to simulate a processing step.
 Both EventFilters send to the EventBuilder, which then requests data from
 component_crv01, which runs in cicular-buffer Window request mode.
@@ -14,23 +14,23 @@ Data is written by DataLogger1 and dispatched to Dispatcher1.
 
 Some notes:
 * This configuration needs an enhanced copy of the boot.txt file, and a
-  sample is included with this configuration.  It also needs a special 
+  sample is included with this configuration.  It also needs a special
   known_boardreaders_list, and that is also provided here.
   To run this demo, you can use the following commands:
   - 'cd <yourArtdaqDemoDir>'
   - 'sh ./run_integration_tests.sh --config complicated_subsystems'
 
-* NOTE that the pull-mode data requests that are used in this sample make use of 
+* NOTE that the pull-mode data requests that are used in this sample make use of
   multicast Ethernet messages.  As such, there may
   be firewall settings that need to be tuned.  Please see the text that describes
   this in ../README.simple_test_configs.
 
-* Each event should contain 2 TOY1 Fragments representing the TRK and CAL, and 
+* Each event should contain 2 TOY1 Fragments representing the TRK and CAL, and
   3 TOY2 Fragments representing the CRV contribution. It should run at 400 events/s.
-  
-* This example does not replicate Mu2e's custom art input source and the 
-  differential between "daq" events from the TRK+CAL and "mu2e" events in the 
+
+* This example does not replicate Mu2e's custom art input source and the
+  differential between "daq" events from the TRK+CAL and "mu2e" events in the
   later EventBuilder stages.
-  
+
 * This example does not replicate Mu2e's custom RoutingPolicy that preferentially
   directs events from the TRK+CAL BRs to the EventFilter on the same node

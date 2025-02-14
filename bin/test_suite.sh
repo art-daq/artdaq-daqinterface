@@ -110,7 +110,7 @@ if $boardreader_aborts_test; then
     sed -r -i 's/.*abort_after_N_seconds.*/abort_after_N_seconds: true/' $boardreader_fhicl
     sed -r -i 's/.*exit_after_N_seconds.*/#exit_after_N_seconds: true/' $boardreader_fhicl
     sed -r -i 's/.*exception_after_N_seconds.*/#exception_after_N_seconds: true/' $boardreader_fhicl
-    
+
     ./bin/just_do_it.sh 0
 fi
 
@@ -123,7 +123,7 @@ if $boardreader_exits_test; then
     sed -r -i 's/.*abort_after_N_seconds.*/#abort_after_N_seconds: true/' $boardreader_fhicl
     sed -r -i 's/.*exit_after_N_seconds.*/exit_after_N_seconds: true/' $boardreader_fhicl
     sed -r -i 's/.*exception_after_N_seconds.*/#exception_after_N_seconds: true/' $boardreader_fhicl
-    
+
     ./bin/just_do_it.sh 0
 fi
 
@@ -137,7 +137,7 @@ if $boardreader_throws_test; then
     sed -r -i 's/.*abort_after_N_seconds.*/#abort_after_N_seconds: true/' $boardreader_fhicl
     sed -r -i 's/.*exit_after_N_seconds.*/#exit_after_N_seconds: true/' $boardreader_fhicl
     sed -r -i 's/.*exception_after_N_seconds.*/exception_after_N_seconds: true/' $boardreader_fhicl
-    
+
     ./bin/just_do_it.sh 0
 fi
 

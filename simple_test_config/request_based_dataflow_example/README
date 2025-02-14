@@ -9,13 +9,13 @@ receives data in push mode from one BoardReader and pulls data from two others.
 Some notes:
 * This configuration benefits from an enhanced copy of the typical boot.txt file, and a
   sample is included with this configuration.  To use this file, you should first
-  edit it to replace <yourArtdaqInstallationDir> with the correct path. You may 
+  edit it to replace <yourArtdaqInstallationDir> with the correct path. You may
   also want to update the partition number that is defined in this file.  Then,
   to run this demo, you can use the following commands:
   - 'cd <yourArtdaqDemoInstallationDir>'
   - 'sh ./run_demo.sh --config request_based_dataflow_example --bootfile `pwd`/artdaq-utilities-daqinterface/simple_test_config/request_based_dataflow_example/boot.txt --comps component01 component02 component03 --'
 
-* NOTE that the pull-mode data requests that are used in this sample make use of 
+* NOTE that the pull-mode data requests that are used in this sample make use of
   multicast Ethernet messages.  As such, there may be firewall settings that need to
   be tuned.  Please see the text that describes this in ../README.simple_test_configs.
 

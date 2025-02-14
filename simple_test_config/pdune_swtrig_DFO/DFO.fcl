@@ -19,7 +19,7 @@ daq: {
       uniquify: true
     }
   }
-} 
+}
 
 art: {
   services: {
@@ -52,7 +52,7 @@ art: {
 
       allow_default_round_robin_routing: false
 
-      policy: {                                                                                                                                        
+      policy: {
         policy: "RoundRobin"
         minimum_participants: -2
       }

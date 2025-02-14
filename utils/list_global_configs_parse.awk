@@ -26,7 +26,7 @@ END {
 	if (match(configs[i], "^[[:space:]]*$")) {
 	    continue
 	}
-	
+
 	# JCF, Mar-31-2017
 
 	# The "RUN_CONFIG" token below, while seemingly unnecessary,

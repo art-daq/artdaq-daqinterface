@@ -123,13 +123,13 @@ remaining output. After 3 seconds, all buffered output is printed.\
 #                processing (default='')
 #       'alias'  a list of aliases (i.e. short form?)
 #       'arg'    the type of option argument:
-#                an integer 
+#                an integer
 #                  0 => option does not take an argument (default)
 #                  1 => option does take an argument
 #                  2 => option takes an optional argument where if it is
 #                       multiple letter (long [--] form) option there must
 #                       be an '=<value>', else if it is a single letter,
-#                       the arg will follow 
+#                       the arg will follow
 #       'opt'    for optional argument type options (arg=2), the
 #                value of the option when specified without an argument
 OPTSPEC={ 'd':{'desc':"List farmlet names"},
@@ -238,9 +238,9 @@ Options:\n"%(env_app,env_app)
             if len(op_) == 1: dash=dash+',-'+op_
             else:             dash=dash+',--'+op_
             if len(op_) == 1 and optspec[op]['arg'] == 1: dash=dash+'<val>'
-            elif                 optspec[op]['arg'] == 1: dash=dash+'<=val>' 
+            elif                 optspec[op]['arg'] == 1: dash=dash+'<=val>'
             if len(op_) == 1 and optspec[op]['arg'] == 2: dash=dash+'[val]'
-            elif                 optspec[op]['arg'] == 2: dash=dash+'[=val]' 
+            elif                 optspec[op]['arg'] == 2: dash=dash+'[=val]'
         usage_out = usage_out + '  %-20s %s\n'%(dash[1:],optspec[op]['desc'])
     # --- done with usage additions
     long_space_separated = ' '+' '.join(long_opts)
@@ -665,17 +665,17 @@ def spawn( cmd, args, combine_stdout_stderr=0 ):
     import pty                          # fork
     import string                       # split
     global g_num_spawns                 # keep track for total life of process
-    
+
     g_num_spawns = g_num_spawns + 1
     cmd_list = cmd.split()    # support cmd='cmd -opt'
 
     # for stdin/out/err for new child. Note: (read,write)=os.pipe()
     if g_opt['pty']: pipe0 = [0,0]    ; pipe1 = [1,1];     pipe2 = os.pipe()
     else:            pipe0 = os.pipe(); pipe1 = os.pipe(); pipe2 = os.pipe()
-    
+
     if g_opt['pty']: pid,fd = pty.fork()
     else:            pid    =  os.fork()
-    
+
     if pid == 0:
         #child
         signal.signal(signal.SIGQUIT,signal.SIG_IGN)
@@ -694,7 +694,7 @@ def spawn( cmd, args, combine_stdout_stderr=0 ):
         for ii in range(3,750):  # if default nway=200, and there are 3 fd's per process...
             try: os.close(ii)#; TRACE( 20, "child successfully closed %d", ii )
             except: pass # TRACE( 10, 'except - os.close(3-750) - spawn' )
-            pass            
+            pass
 
         try: os.execvp( cmd_list[0], cmd_list+args ) # bye-bye python
         except:  # From doc: Errors will be reported as OSError exceptions.
@@ -1499,11 +1499,11 @@ def rgang( opts_n_args ):
     import os                           # system
     import signal                       # signal
     global g_opt
-    global g_thisnode                   # 
-    global g_timeout_l                  # 
-    global g_internal_info              # 
-    global g_branch_info_l              # 
-    global g_mach_idx_offset            # 
+    global g_thisnode                   #
+    global g_timeout_l                  #
+    global g_internal_info              #
+    global g_branch_info_l              #
+    global g_mach_idx_offset            #
     global g_processing_idx             # allow access from signal handler -- to print remaining output
     global g_grp_idxs                   # allow access from signal handler -- to print remaining output
     global g_mach_l                     # allow access from signal handler -- to print remaining output
@@ -1728,7 +1728,7 @@ def rgang( opts_n_args ):
     have_me = 0 # basicaly, flag to skip past idx 0 in branch processing below
     TRACE(5,'rgang - type(g_mach_l[0])=%s g_thisnode.is_me(%s)=%d',
           type(g_mach_l[0]), g_mach_l[0], g_thisnode.is_me(g_mach_l[0]) )
-    #or g_mach_l[0] == 'localhost' 
+    #or g_mach_l[0] == 'localhost'
     if not g_opt['c'] and not g_opt['serial'] and ( g_thisnode.is_me(g_mach_l[0]) or g_opt['do-local'] ):
         have_me = 1
         ret_info[0] = {'name':g_mach_l[0],'stdout':b'','stderr':b'','rmt_sh_sts':None,'crc32':0}
@@ -1752,7 +1752,7 @@ def rgang( opts_n_args ):
     # "completely serial" operation. --serial with --nway=2 with 400 nodes
     # would do 2 set of 200_parallel_spawns This can be demonstrated via:
     #   rgang.py --serial --nway=2 "192.168.1.136{,,,,,}" 'sleep 8;date'
-    inner_nway_first = inner_nway  # with outer_nway (other than 1), (and 
+    inner_nway_first = inner_nway  # with outer_nway (other than 1), (and
     #                      inner_nway==0), group_len can easily change (i.e.
     #       increase by 1 (157nodes/3groups=52+53+52) and therefore the
     #       resultant inner_nway = group_len should be done again.
@@ -1768,7 +1768,7 @@ def rgang( opts_n_args ):
 
         # START EACH BRANCH
         #    need to get:
-        #      - list for select for get output_line and 
+        #      - list for select for get output_line and
         #      - map of select fo to node
         group_len = g_grp_idxs[END] - g_grp_idxs[START]
         if inner_nway > group_len or inner_nway_first == 0: inner_nway = group_len
@@ -2180,7 +2180,7 @@ def rgang( opts_n_args ):
                 if mach_idx == g_processing_idx:
                     if g_internal_info[g_processing_idx]['stage'] == 'rgang': continue # wait for ['stage'] = 'done' (above)
                     TRACE( 28, 'rgang calling initiator_node_status at ACTIVE OUTPUT PROCESSING #1 mach_idx=%d', mach_idx )
-                    initiator_node_status( mach_idx )                    
+                    initiator_node_status( mach_idx )
                     g_processing_idx = g_processing_idx + 1
                     ##while g_processing_idx < (g_grp_idxs[END]-1):
                     while g_processing_idx < g_grp_idxs[END]:
@@ -2197,7 +2197,7 @@ def rgang( opts_n_args ):
                         if not g_opt['pyret']: header( g_mach_l[g_processing_idx], g_args, g_processing_idx )
                         if g_internal_info[g_processing_idx]['stage'] == 'rgang': break # wait for ['stage'] = 'done' (above)
                         TRACE( 28, 'rgang calling initiator_node_status at ACTIVE OUTPUT PROCESSING #2 mach_idx=%d', mach_idx )
-                        initiator_node_status( g_processing_idx )                    
+                        initiator_node_status( g_processing_idx )
                         if ret_info[g_processing_idx]['rmt_sh_sts'] == None:
                             # This is the _not_ normal case
                             if not g_opt['pyret']:
@@ -2378,7 +2378,7 @@ def main():
                         pass
                     sys.stderr.write('\n');sys.stderr.flush()
                     # LIKE "ACTIVE OUTPUT PROCESSING" (above, at end of rgang processing loop)
-                
+
                     if type(g_internal_info[g_processing_idx]) == type({}): # fast ^C check
                         if not g_opt.get('pyret',''):
                             # print-n-flush and clear stdout/err

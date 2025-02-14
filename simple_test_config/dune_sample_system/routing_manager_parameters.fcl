@@ -4,22 +4,22 @@ BEGIN_PROLOG
 artdaq_BR_routing_table_specification: {
            ## True if using the Routing Manager
            use_routing_manager: true
-       
+
            ## Port that table updates should arrive on
            table_update_port: 35556  # default
-       
+
            ## Address that table updates should arrive on
            table_update_address: "227.128.12.28"  # default
-       
+
            ## Port that acknowledgements should be sent to
            table_acknowledge_port: 35557  # default
-       
+
            ## Host that acknowledgements should be sent to
            routing_manager_hostname: "localhost"  # default
-       
+
            ## Time to wait (in ms) for a routing table update if the table is exhausted
            routing_timeout_ms: 2000  # default 1000
-       
+
            ## Number of times to retry getting destination from routing table
            routing_retry_count: 5  # default
 
