@@ -16,7 +16,7 @@ daq: {
     sources: { }
   }
   metrics: @local::EB_metrics_default
-} 
+}
 
 services: {
   ArtdaqSharedMemoryServiceInterface: @local::art_service_for_shared_memory
@@ -35,7 +35,7 @@ physics: {
     toy1Integ: {
       module_type: CheckIntegrity
       raw_data_label: "daq"
-      frag_type: "TOY1"      
+      frag_type: "TOY1"
     }
     toy2Integ: {
       module_type: CheckIntegrity
@@ -59,7 +59,7 @@ physics: {
 
   pmod2: [ prescaleMod2 ]
   pmod3: [ prescaleMod3 ]
-   
+
   a1: [ toy1Integ, toy2Integ ]
   my_output_modules: [ rootNetOutput ]
 }

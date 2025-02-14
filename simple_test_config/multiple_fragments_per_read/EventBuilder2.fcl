@@ -28,7 +28,7 @@ daq: {
 multicast_interface_ip: "0.0.0.0"
     request_port: 3001
     request_address: "227.128.12.26"
-	
+
     routing_token_config: {
         ## True if using the Routing Master
         use_routing_master: true
@@ -50,7 +50,7 @@ multicast_interface_ip: "0.0.0.0"
 	  uniquify: true
 	}
   }
-} 
+}
 
 outputs: {
   rootNetOutput: {

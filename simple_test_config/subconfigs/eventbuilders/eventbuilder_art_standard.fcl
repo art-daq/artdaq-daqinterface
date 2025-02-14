@@ -15,7 +15,7 @@ eventbuilder_art_standard: {
       # A common use case for an experiment is to run art filters on
       # the events before sending them downstream
 
-      filters: {} 	    
+      filters: {}
 
       my_output_modules: [
          "rootNetOutput"

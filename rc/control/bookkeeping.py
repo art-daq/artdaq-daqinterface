@@ -191,7 +191,7 @@ def bookkeeping_for_fhicl_documents_artdaq_v3_base(self):
                 ids += [ss_source]
 
         return ids
-        
+
 
     expected_fragments_per_event = {}
     for ss in self.subsystems:
@@ -247,7 +247,7 @@ def bookkeeping_for_fhicl_documents_artdaq_v3_base(self):
                         ),
                         self.procinfos[i_proc].fhicl_used,
                     )
-    
+
     # Check for places where Fragment IDs need to be filled in
 
     for i_proc in range(len(self.procinfos)):

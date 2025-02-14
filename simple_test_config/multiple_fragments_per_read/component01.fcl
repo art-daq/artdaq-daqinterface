@@ -2,22 +2,22 @@
   fragment_receiver: {
 	mpi_sync_interval: 50
 
-	# CommandableFragmentGenerator Configuration: 
+	# CommandableFragmentGenerator Configuration:
 fragment_ids: []
 fragment_id: -99 # Please define only one of these
 
 sleep_on_stop_us: 0
 
-    # Generated Parameters: 
-    generator: ToySimulator
-    fragment_type: TOY1
-    fragment_id: 0
-    starting_fragment_id: 0
-    random_seed: 9079
-    sleep_on_stop_us: 500000 
+	# Generated Parameters:
+	generator: ToySimulator
+	fragment_type: TOY1
+	fragment_id: 0
+	starting_fragment_id: 0
+	random_seed: 9079
+	sleep_on_stop_us: 500000
 
-    # Generator-Specific Configuration:
-    
+	# Generator-Specific Configuration:
+
 request_mode: "Ignored" # Possible values are: Ignored, Single, Buffer, Window
 
 nADCcounts: 2000
@@ -30,29 +30,29 @@ timestamp_scale_factor: 5
 
 
 	destinations: {	}
-	
+
 	routing_table_config: {
-           ## True if using the Routing Master
-           use_routing_master: true
-       
-           ## Port that table updates should arrive on
-           table_update_port: 35556  # default
-       
-           ## Address that table updates should arrive on
-           table_update_address: "227.128.12.28"  # default
-       
-           ## Port that acknowledgements should be sent to
-          table_acknowledge_port: 35557  # default
-       
-           ## Host that acknowledgements should be sent to
-           routing_master_hostname: "localhost"  # default
-       
-           ## Time to wait (in ms) for a routing table update if the table is exhausted
-           routing_timeout_ms: 1000  # default
-       
-           ## Number of times to retry getting destination from routing table
-           routing_retry_count: 5  # default
-      	}
+		   ## True if using the Routing Master
+		   use_routing_master: true
+
+		   ## Port that table updates should arrive on
+		   table_update_port: 35556  # default
+
+		   ## Address that table updates should arrive on
+		   table_update_address: "227.128.12.28"  # default
+
+		   ## Port that acknowledgements should be sent to
+		  table_acknowledge_port: 35557  # default
+
+		   ## Host that acknowledgements should be sent to
+		   routing_master_hostname: "localhost"  # default
+
+		   ## Time to wait (in ms) for a routing table update if the table is exhausted
+		   routing_timeout_ms: 1000  # default
+
+		   ## Number of times to retry getting destination from routing table
+		   routing_retry_count: 5  # default
+		}
 
   }
 

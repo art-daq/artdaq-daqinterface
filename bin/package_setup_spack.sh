@@ -31,7 +31,7 @@ if [[ -n $spackdir ]]; then
 	echo -e "\n\nCommand will not work: attempted setup of $spackdir failed" >&2
 	return 50
     fi
-    
+
     num_packages=$(spack find --no-groups $packagename | wc -l )
 
     if (( num_packages == 0 )); then

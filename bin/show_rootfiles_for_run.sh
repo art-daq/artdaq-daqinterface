@@ -79,7 +79,7 @@ elif (( $nmatches == 1 )); then
 
 	if [[ -n $prochost ]]; then
 	    cmd="ls -l $file_format"
-	    
+
 	    if (( $nevents > 0 )); then
 		cmd="$cmd ; echo ; if [[ -z \$( type rawEventDump 2>/dev/null ) ]]; then \
 if [[ \"$( grep -El "^\s*alias rawEventDump" $recorddir/$runnum/setup.txt )\" != \"\" ]] ; then \
@@ -113,8 +113,8 @@ $cmd "
 
 		cat <<EOF
 
-The command 
-"$cmd" 
+The command
+"$cmd"
 returned nonzero; this almost certainly means you
 won't get the info you want about the root file, if any, written by
 the $proclabel process on $prochost for run $runnum.
@@ -122,7 +122,7 @@ the $proclabel process on $prochost for run $runnum.
 EOF
 
 	    fi
-	    
+
 	    echo ==============================================================================================
 	else
 	    cat<<EOF >&2
@@ -147,6 +147,3 @@ elif (( $nmatches > 1 )); then
 fi
 
 done
-
-
-

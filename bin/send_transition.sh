@@ -22,13 +22,13 @@ fi
 
 case $cmd in
     "boot")
-	test $# -gt 1 || badargs=true 
+	test $# -gt 1 || badargs=true
 	translated_cmd="booting"
 	boot_filename=$2
 	xmlrpc_arg="boot_filename:s/"${boot_filename}
 	;;
     "config")
-	test $# -gt 1 || badargs=true 
+	test $# -gt 1 || badargs=true
 	translated_cmd="configuring"
 
 	xmlrpc_arg="config:array/("
@@ -42,7 +42,7 @@ case $cmd in
 	done
 	;;
     "start")
-	test $# == 1 || test $# == 2 || badargs=true 
+	test $# == 1 || test $# == 2 || badargs=true
 	translated_cmd="starting"
 
 	runnum=0
@@ -51,7 +51,7 @@ case $cmd in
 	if [[ $# == 1 ]]; then
             runnum=$((highest_runnum + 1))
         else
-            runnum=$2 
+            runnum=$2
         fi
 
 	xmlrpc_arg="run_number:i/"$runnum
@@ -65,15 +65,15 @@ case $cmd in
         translated_cmd="disabling"
 	;;
     "stop")
-	test $# == 1 || badargs=true 
+	test $# == 1 || badargs=true
 	translated_cmd="stopping"
 	;;
     "shutdown")
-	test $# == 1 || badargs=true 
+	test $# == 1 || badargs=true
 	translated_cmd="shutting"
 	;;
     "terminate")
-	test $# == 1 || badargs=true 
+	test $# == 1 || badargs=true
 	translated_cmd="terminating"
 	;;
     *)
@@ -96,6 +96,6 @@ else
     full_cmd=${full_cmd}" 'struct/{ignored_variable:i/999}' "
 fi
 
-echo $full_cmd 
-eval $full_cmd 
+echo $full_cmd
+eval $full_cmd
 exit 0

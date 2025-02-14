@@ -46,4 +46,3 @@ def test_convert_to_time():
     time2 = '2015-10-30 14:26:32.10'
     dt1 = convert_to_time(time1)
     dt2 = convert_to_time(time2)
-    

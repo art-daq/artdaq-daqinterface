@@ -29,7 +29,7 @@ multicast_interface_ip: "0.0.0.0"
 	request_port: 3001
 	request_address: "227.128.12.26"
 	expected_art_event_processing_time_us: 2000000
-	
+
 	routing_token_config: {
 	use_routing_manager: false
 	}
@@ -44,7 +44,7 @@ multicast_interface_ip: "0.0.0.0"
 	  uniquify: true
 	}
   }
-} 
+}
 
 outputs: {
   rootNetOutput: {

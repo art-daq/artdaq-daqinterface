@@ -10,7 +10,7 @@ daq: {
 	verbose: true
 	init_fragment_count: 0
 	send_requests: false
-	
+
     routing_token_config: {
         ## True if using the Routing Manager
         use_routing_manager: true
@@ -33,7 +33,7 @@ daq: {
 	  uniquify: true
 	}
   }
-} 
+}
 
 art: {
 services: {
@@ -43,7 +43,7 @@ services: {
 outputs: {
   subsystemOutput: {
     module_type: RootNetOutput
-    #SelectEvents: [ delay ] 
+    #SelectEvents: [ delay ]
     #broadcast_sends: true
 	destinations: {	}
 
@@ -53,7 +53,7 @@ outputs: {
   }
   lumiOutput: {
     module_type: RootNetOutput
-    #SelectEvents: [ delay ] 
+    #SelectEvents: [ delay ]
     #broadcast_sends: true
 	destinations: {	}
 
@@ -76,7 +76,7 @@ physics: {
     toy1Integ: {
       module_type: CheckIntegrity
       raw_data_label: "daq"
-      frag_type: "TOY1"      
+      frag_type: "TOY1"
     }
     toy2Integ: {
       module_type: CheckIntegrity

@@ -2,19 +2,19 @@
   fragment_receiver: {
 	mpi_sync_interval: 50
 
-	# CommandableFragmentGenerator Configuration: 
+	# CommandableFragmentGenerator Configuration:
 fragment_ids: []
 fragment_id: -99 # Please define only one of these
 
 sleep_on_stop_us: 0
 
-    # Generated Parameters: 
+    # Generated Parameters:
     generator: ToySimulator
     fragment_type: TOY1
     fragment_id: 1
     starting_fragment_id: 1
     random_seed: 3809
-    sleep_on_stop_us: 500000 
+    sleep_on_stop_us: 500000
 
     # Generator-Specific Configuration:
 

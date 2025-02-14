@@ -20,8 +20,8 @@ if (( $num_daqinterfaces > 1 )); then
 cat <<heredoc
 
 This command will be sent to a DAQInterface instance in partition
-$DAQINTERFACE_PARTITION_NUMBER listening on port $DAQINTERFACE_PORT if it exists; to instead send to a 
-DAQInterface instance on another partition, execute 
+$DAQINTERFACE_PARTITION_NUMBER listening on port $DAQINTERFACE_PORT if it exists; to instead send to a
+DAQInterface instance on another partition, execute
 "export DAQINTERFACE_PARTITION_NUMBER=<desired partition number>"
 
 heredoc
@@ -48,4 +48,3 @@ heredoc
 fi
 
 }
-

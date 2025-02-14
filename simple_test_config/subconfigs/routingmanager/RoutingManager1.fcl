@@ -2,7 +2,7 @@
 daq: {
 
    policy: {
-      
+
       # policy denotes the routing manager's algorithm to determine how to assign events to evenbuilders. Current choices are "NoOp", "RoundRobin", and "CapacityTest"; see the artdaq/Application/Routing directory in the artdaq package for details
       policy: "NoOp"
    }

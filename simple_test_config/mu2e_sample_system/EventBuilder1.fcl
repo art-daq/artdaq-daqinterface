@@ -27,7 +27,7 @@ daq: {
 	  uniquify: true
 	}
   }
-} 
+}
 
 art: {
 services: {
@@ -39,7 +39,7 @@ outputs: {
     module_type: RootNetOutput
     #SelectEvents: { SelectEvents: [ pmod2,pmod3 ] }
     #broadcast_sends: true
-	destinations: {	}	
+	destinations: {	}
   }
   #normalOutput: {
   #  module_type: RootDAQOut
@@ -81,7 +81,7 @@ multicast_interface_ip: "0.0.0.0"
 
   pmod2: [ prescaleMod2 ]
   pmod3: [ prescaleMod3 ]
-   
+
   a1: [ requests ]
   my_output_modules: [ rootNetOutput ]
 }

@@ -49,12 +49,12 @@ for procname in boardreader eventbuilder routingmanager datalogger dispatcher; d
 		    else
 			cat <<EOF
 
-$metadata_file lists 
+$metadata_file lists
 $filename
 as being on this host but it doesn't appear to exist (any longer)
 
 EOF
-		    
+
 		    fi
 		else
 		    ssh -f $host "if [[ -e $filename ]]; then cat $filename ; else echo \"File $filename doesn't appear to exist (any longer)\" ; fi"
@@ -71,4 +71,3 @@ done
 
 echo "Unable to find logfile corresponding to process \"$proclabel\" from run $runnum" >&2
 exit 1
-

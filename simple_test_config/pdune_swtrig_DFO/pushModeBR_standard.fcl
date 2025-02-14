@@ -2,7 +2,7 @@ BEGIN_PROLOG
 
 pushModeBR_daq_standard: {
   fragment_receiver: {
-    sleep_on_stop_us: 500000 
+    sleep_on_stop_us: 500000
     request_mode: "Ignored" # Possible values are: Ignored, Single, Buffer, Window
     separate_data_thread: false
     fragment_id: 101

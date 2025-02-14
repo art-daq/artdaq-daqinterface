@@ -2,7 +2,7 @@ BEGIN_PROLOG
 
 datalogger_daq_standard: {
    aggregator: {
-   
+
       # auto_suppression_enabled defines whether to suppress a source that gets too far ahead
       auto_suppression_enabled: false
 
@@ -16,7 +16,7 @@ datalogger_daq_standard: {
       expected_art_event_processing_time_us: 2e6
       expected_fragments_per_event: 1  # Don't change this
       is_data_logger: true  # Don't change this
-      
+
       # Only send 1/onmon_event_prescale events to art for online monitoring
       onmon_event_prescale: 1
       restart_crashed_art_processes: false

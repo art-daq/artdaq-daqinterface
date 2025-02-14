@@ -20,7 +20,7 @@ echo
 
 for run in $( ls -tr1 $recorddir | tail -$nruns  ); do
 
-    
+
     metadata_filename=$recorddir/$run/metadata.txt
 
     if [[  -e $metadata_filename ]]; then
@@ -43,10 +43,10 @@ for run in $( ls -tr1 $recorddir | tail -$nruns  ); do
 	    foundstring=0
 
 	    if [[ -n $fileglob ]]; then
-		
+
 		files_time_ordered=$( ls -tr $fileglob | tr "\n" " ")
 
-		res=$( sed -r -n '/Started run '$run'/,/Started run '$((run+1))'/{/'"$label"'/{N;/'"$searchstring"'/p}}' $files_time_ordered ) 
+		res=$( sed -r -n '/Started run '$run'/,/Started run '$((run+1))'/{/'"$label"'/{N;/'"$searchstring"'/p}}' $files_time_ordered )
 		if [[ -n $res ]]; then
 		    foundstring=1
 		else

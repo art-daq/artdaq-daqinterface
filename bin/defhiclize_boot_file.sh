@@ -46,7 +46,7 @@ exit 1
 fi
 
 tmpfile=$( mktemp )
-fhicl-dump -l 0 -c $bootfile > $tmpfile 
+fhicl-dump -l 0 -c $bootfile > $tmpfile
 
 if [[ "$?" != "0" ]]; then
     cat<<EOF >&2

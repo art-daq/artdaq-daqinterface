@@ -5,7 +5,7 @@ if [[ "$#" == "0" ]]; then
     cat>&2<<EOF
 
         No arguments were supplied to this script: you need to provide
-        a list of boardreaders. For allowed boardreader names, execute 
+        a list of boardreaders. For allowed boardreader names, execute
         "listdaqcomps.sh"
 
 EOF
@@ -32,7 +32,7 @@ fi
 components_file=$DAQINTERFACE_KNOWN_BOARDREADERS_LIST
 
 if [[ ! -e $components_file ]]; then
-    
+
     cat>&2<<EOF
 
     Unable to find file containing allowed components, "$components_file"
@@ -57,12 +57,12 @@ for comp in $components; do
 	port=$( echo $comp_line | awk '{print $3}' )
 	subsystem=$( echo $comp_line | awk '{print $4}' )
 	allowed_processors=$( echo $comp_line | awk '{print $5}' )
-	
+
 	# sed command below says "Grab a quoted sixth field, if it exists"
 	prepend=$( echo $comp_line | sed -r -n "s/^\S+\s+\S+\s+\S+\s+\S+\s+\S+\s+(\"[^\"]+\")/\1/p" )
 
 
-	if [[ -z $prepend ]] && (( $( echo $comp_line | awk '{ print NF  }' ) >= 6 )); then 
+	if [[ -z $prepend ]] && (( $( echo $comp_line | awk '{ print NF  }' ) >= 6 )); then
 
 	    cat<<EOF >&2
 
@@ -85,7 +85,7 @@ exit 1
 	subsystem=${subsystem:-"1"}
 
 	xmlrpc_arg=${xmlrpc_arg}${comp}":array/(s/"${host}","${port}","${subsystem}
-	
+
 	if [[ -n $allowed_processors ]]; then
 	    xmlrpc_arg=${xmlrpc_arg}","${allowed_processors}
 	fi
@@ -98,7 +98,7 @@ exit 1
 
 	test $comp_cntr != $num_components && xmlrpc_arg=${xmlrpc_arg}","
     else
-	
+
 	cat>&2<<EOF
 
 	Unable to find listing for component "$comp" in

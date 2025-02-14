@@ -32,7 +32,7 @@ daq: {
       uniquify: true
     }
   }
-} 
+}
 
 outputs: {
   binaryNetOutput: {

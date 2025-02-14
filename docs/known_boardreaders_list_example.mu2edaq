@@ -20,11 +20,11 @@ component18 mu2edaq07 -1 1
 component19 mu2edaq14 -1 1
 component1000 mu2edaq11 -1 1
 component1001 mu2edaq07 -1 1
-component_one_event_per_subrun mu2edaq14 
-component_throws_exception mu2edaq11	
-component_dies_from_exit mu2edaq07 	
-component_dies_from_abort mu2edaq14 	
-component_hangs mu2edaq11 		
+component_one_event_per_subrun mu2edaq14
+component_throws_exception mu2edaq11
+component_dies_from_exit mu2edaq07
+component_dies_from_abort mu2edaq14
+component_hangs mu2edaq11
 component_fragment_size_blows_up mu2edaq07
 component_buffer_mode mu2edaq14
 component_throws_exception_on_config mu2edaq11

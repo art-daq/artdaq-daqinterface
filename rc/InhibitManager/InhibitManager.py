@@ -36,7 +36,7 @@ class StatusMsg:
 
 def CreateStatusMsg(process,marker,status):
     return "%s_%s_%s_%s_%s" % (STATUS_MSG_MARKER,str(process),str(marker),str(status),datetime.datetime.now())
-    
+
 class StatusSUBNode:
     def __init__(self,zmq_context):
         self.socket = zmq_context.socket(zmq.SUB)
@@ -97,7 +97,7 @@ class InhibitSUBNode:
         return "TIMEOUT"
 
 class InhibitManager:
-    
+
     def __init__(self,update_freq=1.0,verbose=False): #timeout in seconds
         self.frontend_dict = { 'INHIBITMANAGER':"OK" }
         self.current_status = "XON"
@@ -108,7 +108,7 @@ class InhibitManager:
         print ("Current Status = %s" % self.current_status)
         for fe in self.frontend_dict:
             print ("\t%s : %s" % (fe,frontend_dict[fe]))
-        
+
     def status(self):
         return self.current_status
 
@@ -119,12 +119,12 @@ class InhibitManager:
                 tmp_status="XOFF"
                 break
         self.current_status=tmp_status
-    
+
     def register_status_msg(self,msg):
         self.frontend_dict[msg.process()] = msg.status()
         if msg.status()!=self.status():
             self.update_status()
-                    
+
     def run(self,subscriber,publisher):
         timelast = datetime.datetime.now()
         while True:
@@ -141,4 +141,3 @@ class InhibitManager:
             if diff.total_seconds()>self.update_freq:
                  publisher.send_inhibit_msg(self.status(),"no change")
                  timelast = timenow
-

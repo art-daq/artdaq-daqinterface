@@ -4,4 +4,3 @@ daq: @local::component01_push_standard
 daq.fragment_receiver.fragment_id: 3007
 daq.fragment_receiver.starting_fragment_id: 3007
 daq.fragment_receiver.dies_on_config: true
-

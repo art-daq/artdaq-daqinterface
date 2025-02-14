@@ -2,7 +2,7 @@
   fragment_receiver: {
 	mpi_sync_interval: 50
 
-	# CommandableFragmentGenerator Configuration: 
+	# CommandableFragmentGenerator Configuration:
 fragment_ids: []
 fragment_id: -99 # Please define only one of these
 
@@ -10,7 +10,7 @@ sleep_on_stop_us: 0
 
 request_mode: "Ignored" # Possible values are: Ignored, Single, Buffer, Window
 
-end_of_run_quiet_timeout_ms: 1000 # Time, in milliseconds, that the entire system must be quiet for check_stop to return true in request mode. 
+end_of_run_quiet_timeout_ms: 1000 # Time, in milliseconds, that the entire system must be quiet for check_stop to return true in request mode.
 
 data_buffer_depth_fragments: 1000
 data_buffer_depth_mb: 1000
@@ -28,16 +28,16 @@ separate_monitoring_thread: false # Whether a thread should be started which per
 hardware_poll_interval_us: 0 # How often, in microseconds, checkHWStatus_() should be called. 0 to disable.
 
 
-    # Generated Parameters: 
+    # Generated Parameters:
     generator: AsciiSimulator
     fragment_type: ASCII
     fragment_id: 0
     starting_fragment_id: 0
     random_seed: 5759
-    sleep_on_stop_us: 500000 
+    sleep_on_stop_us: 500000
 
     # Generator-Specific Configuration:
-    
+
 throttle_usecs: 100000
 max_fragment_size_bytes: 10000
 string1: "You want to grep for \"grep\" in the output file!"

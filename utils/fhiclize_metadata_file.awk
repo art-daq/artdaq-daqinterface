@@ -141,14 +141,14 @@
 
     colonloc=match($0, ":");
 
-    if (RSTART != 0) { 
+    if (RSTART != 0) {
 	firstpart=substr($0, 1, RSTART);
 	secondpart=substr($0, RSTART+1);
 	sub("^[ +]", "", secondpart)
 
 	if (firstpart ~ "Config name" || firstpart ~ "DAQInterface start time" ||
 	    firstpart ~ "DAQInterface stop time" || firstpart ~ "Total events" ) {
-	    
+
 	    firstpart = tolower(firstpart)
 	    gsub(" ", "_", firstpart)
 
@@ -218,5 +218,5 @@ END {
 	}
 	printf "]\n"
     }
-    
+
 }
