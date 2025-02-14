@@ -193,7 +193,7 @@ def save_run_record_base(self):
 
     package_buildinfo_dict = get_build_info(buildinfo_packages, self.daq_setup_script)
 
-    
+
     try:
         commit_info_fullpathname = "%s/%s" % (
             os.path.dirname(self.daq_setup_script),

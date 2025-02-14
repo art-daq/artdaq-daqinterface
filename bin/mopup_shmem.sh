@@ -35,11 +35,11 @@ $timeoutsecs second timeout...
 EOF
 
 		res=$( timeout $timeoutsecs $ARTDAQ_DAQINTERFACE_DIR/bin/status.sh | tail -1 | tr "'" " " | awk '{print $2}' )
-		
+
 		if [[ "$res" == "stopped" ]]; then
 
 			echo "DAQInterface in \"stopped\" state; will proceed with cleaning up the shared memory blocks"
-			
+
 		elif [[ "$res" == "" ]]; then
 
 			cat <<EOF >&2
@@ -51,7 +51,7 @@ regardless, execute it again with the option "--force"
 added. Exiting...
 
 EOF
-	
+
     exit 1
 
 		elif [[ "$res" != "stopped" ]]; then
@@ -78,7 +78,7 @@ num_blocks=$( ipcs | grep -E "^0xee${hextoken}|^0xbb${hextoken}|^0x${hextoken}00
 num_owned_blocks_before=$( ipcs | grep -E "^0xee${hextoken}|^0xbb${hextoken}|^0x${hextoken}00" | grep $USER | wc -l )
 
 if (( $num_blocks != $num_owned_blocks_before )); then
-    
+
     cat<<EOF >&2
 
 WARNING: it appears that only $num_owned_blocks_before of $num_blocks shared
@@ -120,7 +120,7 @@ for shmid in $( get_shmids ); do
 
     if (( nattached > 0 )); then
     	owner_pid=$( ipcs -mp | awk '{ if ("'$shmid'" == $1) { print $4 } }' )
-		
+
     	if [[ "$owner_pid" =~ ^[0-9]+$ ]]; then
 			if ! [[ "$owner_pids" =~ " $owner_pid " ]]; then
 				owner_pids=" $owner_pid $owner_pids"

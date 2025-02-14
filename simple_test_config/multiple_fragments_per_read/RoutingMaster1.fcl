@@ -8,7 +8,7 @@
 
   	table_update_interval_ms: 1000
 	table_ack_retry_count: 5
-    
+
     ## True if using the Routing Master
     use_routing_master: true
 
@@ -20,19 +20,19 @@
 
     ## Port that table updates should arrive on
     table_update_port: 35556  # default
-    
+
     ## Address that table updates should arrive on
     table_update_address: "227.128.12.28"  # default
-       
+
     ## Port that acknowledgements should be sent to
     table_acknowledge_port: 35557  # default
-       
+
     ## Time to wait (in ms) for a routing table update if the table is exhausted
     routing_timeout_ms: 1000  # default
-       
+
     ## Number of times to retry getting destination from routing table
     routing_retry_count: 5  # default
-	
+
 
   metrics: {
 	rmFile: {
@@ -45,7 +45,7 @@
 	   metricPluginType: "ganglia"
 	   level: 3
 	   reporting_interval: 15.0
-	 
+
 	   configFile: "/etc/ganglia/gmond.conf"
 	   group: "ARTDAQ"
 	 }
@@ -53,7 +53,7 @@
 	#    level: %{mf_level}
 	#    metricPluginType: "msgFacility"
 	#    output_message_application_name: "ARTDAQ Metric"
-	#    output_message_severity: 0 
+	#    output_message_severity: 0
 	# }
 	# graphite: {
 	#   level: %{graphite_level}

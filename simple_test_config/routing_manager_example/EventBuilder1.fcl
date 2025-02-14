@@ -38,12 +38,12 @@ daq: {
 	  uniquify: true
 	}
   }
-} 
+}
 
 outputs: {
   rootNetOutput: {
     module_type: RootNetOutput
-    #SelectEvents: { SelectEvents: [ pmod2,pmod3 ] 
+    #SelectEvents: { SelectEvents: [ pmod2,pmod3 ]
     #broadcast_sends: true
 	destinations: {	}
 
@@ -83,7 +83,7 @@ physics: {
 
   pmod2: [ prescaleMod2 ]
   pmod3: [ prescaleMod3 ]
-   
+
   my_output_modules: [ rootNetOutput ]
   #my_output_modules: [ normalOutput ]
 }

@@ -1,5 +1,5 @@
- #include "eventbuilder_standard.fcl" 
+ #include "eventbuilder_standard.fcl"
 
-daq: @local::eventbuilder_daq_standard 
+daq: @local::eventbuilder_daq_standard
 
-art: @local::eventbuilder_art_standard 
+art: @local::eventbuilder_art_standard

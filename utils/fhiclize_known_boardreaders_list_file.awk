@@ -8,7 +8,7 @@
     if ($0 ~ /^\s*$/ ) {
 	next
     }
-  
+
     part_of_string=0
 
     printf("%s: [", $1);
@@ -16,14 +16,14 @@
         if ($i ~ /^"/) {
            part_of_string=1
 	}
-     
+
         if (part_of_string != 1) {
 	    printf("\"%s\"", $i);
 
 	    if (i != NF) {
 		printf(", ");
 	    } else {
-		printf("]\n"); 
+		printf("]\n");
 	    }
 	} else {
 	    printf("%s ", $i);

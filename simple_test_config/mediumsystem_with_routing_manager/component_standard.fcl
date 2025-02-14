@@ -2,7 +2,7 @@ BEGIN_PROLOG
 
 component_standard: {
     fragment_receiver: {
-	# CommandableFragmentGenerator Configuration: 
+	# CommandableFragmentGenerator Configuration:
 	fragment_ids: []
 	fragment_id: -99 # Please define only one of these
 
@@ -12,15 +12,15 @@ component_standard: {
 	fragment_id: 1
 	starting_fragment_id: 1
 	random_seed: 1738
-	sleep_on_stop_us: 500000 
+	sleep_on_stop_us: 500000
 
 	request_mode: "Window" # Possible values are: Ignored, Single, Buffer, Window
 
-	end_of_run_quiet_timeout_ms: 1000 # Time, in milliseconds, that the entire system must be quiet for check_stop to return true in request mode. 
+	end_of_run_quiet_timeout_ms: 1000 # Time, in milliseconds, that the entire system must be quiet for check_stop to return true in request mode.
 
 	data_buffer_depth_fragments: 1000
 	data_buffer_depth_mb: 1000
-	
+
 receive_requests: true
 multicast_interface_ip: "0.0.0.0"
 	request_port: 3001
@@ -51,25 +51,25 @@ hardware_poll_interval_us: 0 # How often, in microseconds, checkHWStatus_() shou
 	routing_table_config: {
            ## True if using the Routing Manager
            use_routing_manager: true
-       
+
            ## Port that table updates should arrive on
            table_update_port: 35556  # default
-       
+
            ## Multicast address that table updates should arrive on
            table_update_address: "227.128.12.28"  # default
-       
+
            ## Network interface that multicast table updates should arrive on
            table_update_multicast_interface: "0.0.0.0"
-       
+
            ## Port that acknowledgements should be sent to
            table_acknowledge_port: 35557  # default
-       
+
            ## Host that acknowledgements should be sent to
            routing_manager_hostname: "localhost"  # default
-       
+
            ## Time to wait (in ms) for a routing table update if the table is exhausted
            routing_timeout_ms: 2000  # default 1000
-       
+
            ## Number of times to retry getting destination from routing table
            routing_retry_count: 5  # default
        	}

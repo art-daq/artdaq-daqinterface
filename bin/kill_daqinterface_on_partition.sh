@@ -6,7 +6,7 @@ read -r -d '' usage_blurb <<EOF
 :
         You need to provide a list of integers to this script
         corresponding to the partitions of the DAQInterface instances
-        you want killed. 
+        you want killed.
 
         If you want to perform a hard kill (kill -9) of the
         DAQInterface instances, add the token "--force"; this is only
@@ -14,7 +14,7 @@ read -r -d '' usage_blurb <<EOF
         the "--force" token, as cleanup may be incomplete (orphaned
         artdaq processes, etc.)
 
-        To see what DAQInterface instances are up, execute "listdaqinterfaces.sh". 
+        To see what DAQInterface instances are up, execute "listdaqinterfaces.sh".
 
 EOF
 
@@ -30,12 +30,12 @@ fi
 scriptdir="$(dirname "$0")"
 daqutils_script=$scriptdir/daqutils.sh
 
-if ! [[ -e $daqutils_script ]]; then 
+if ! [[ -e $daqutils_script ]]; then
      echo $(date) "Unable to source $daqutils_script - script not found" >&2
      exit 30
-else   
+else
      . $daqutils_script
-fi   
+fi
 
 forcibly_kill=false
 
@@ -76,7 +76,7 @@ for partition in "$@"; do
 	continue
     fi
 
-    if ! [[ "$partition" =~ ^[0-9]+$ ]]; then  
+    if ! [[ "$partition" =~ ^[0-9]+$ ]]; then
 	echo "Error: argument \"$partition\" does not appear to be a partition number or an accepted option" >&2
 	exit 1
     fi
@@ -85,13 +85,13 @@ for partition in "$@"; do
     daqinterface_pid=$( eval $cmd_to_get_daqinterface_pid )
 
     if [[ -n $daqinterface_pid ]]; then
-	
+
 	if ! $forcibly_kill ; then
 
 cat <<EOF
 
 Checking to make sure that DAQInterface on partition $partition is in the "stopped" state.
-If the script appears to hang here, there's an issue communicating with DAQInterface; hit Ctrl-c, 
+If the script appears to hang here, there's an issue communicating with DAQInterface; hit Ctrl-c,
 and then re-run this script with the "--force" option added at the end.
 
 EOF
@@ -109,7 +109,7 @@ the "stopped" state:
 EOF
 		  status.sh | grep "Result\|String"
 
-		  cat<<EOF 
+		  cat<<EOF
 
 Are you *sure* you want to go ahead and kill it? Doing so may result
 in improper cleanup of artdaq processes, etc. Respond with "y" or "Y"
@@ -127,11 +127,11 @@ EOF
 
 	     echo "Killing DAQInterface listening on partition $partition"
 
-	     kill $daqinterface_pid 
+	     kill $daqinterface_pid
 	     kill_tail_f $partition
 	else
-	     kill $daqinterface_pid 
-	     kill_tail_f $partition	     
+	     kill $daqinterface_pid
+	     kill_tail_f $partition
 
 	     daqinterface_pid=$( eval $cmd_to_get_daqinterface_pid )
 
@@ -147,7 +147,7 @@ EOF
 	echo "No DAQInterface listening on partition $partition was found" >&2
 	continue
     fi
-    
+
 done
 
 

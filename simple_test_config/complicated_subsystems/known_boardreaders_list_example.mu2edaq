@@ -20,11 +20,11 @@ component18 mu2edaq13-data -1 1
 component19 mu2edaq14-data -1 1
 component1000 mu2edaq11-data -1 1
 component1001 mu2edaq13-data -1 1
-component_one_event_per_subrun mu2edaq14-data 
-component_throws_exception mu2edaq11-data	
-component_dies_from_exit mu2edaq13-data 	
-component_dies_from_abort mu2edaq14-data 	
-component_hangs mu2edaq11-data 		
+component_one_event_per_subrun mu2edaq14-data
+component_throws_exception mu2edaq11-data
+component_dies_from_exit mu2edaq13-data
+component_dies_from_abort mu2edaq14-data
+component_hangs mu2edaq11-data
 component_fragment_size_blows_up mu2edaq13-data
 component_buffer_mode mu2edaq14-data
 component_throws_exception_on_config mu2edaq11-data

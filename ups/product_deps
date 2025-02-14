@@ -20,8 +20,8 @@ no_fq_dir
 # fcldir  product_dir  fcl
 # libdir  fq_dir       lib
 # bindir  fq_dir       bin
-# gdmldir -  
-# fwdir -  
+# gdmldir -
+# fwdir -
 #
 # If a particular directory_type is not specified that item will not be
 # defined in the UPS table file.
@@ -38,8 +38,8 @@ bindir product_dir bin
 product		version
 cetmodules	v3_24_01	-	only_for_build
 end_product_list
- 
-# e5  - with gcc 4.8.2 and -std=c++11 
+
+# e5  - with gcc 4.8.2 and -std=c++11
 # e5 also implies cmake v2_8_12_2,which is pulled in by cetbuildtools
 # e4  - with gcc 4.8.1 and -std=c++11
 # e5  - with gcc 4.7.1 and -std=c++11

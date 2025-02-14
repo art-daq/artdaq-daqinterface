@@ -2,25 +2,25 @@
   fragment_receiver: {
 	mpi_sync_interval: 50
 
-	# CommandableFragmentGenerator Configuration: 
+	# CommandableFragmentGenerator Configuration:
 fragment_ids: []
 fragment_id: -99 # Please define only one of these
 
 sleep_on_stop_us: 0
 
-    # Generated Parameters: 
+    # Generated Parameters:
     generator: ToySimulator
     fragment_type: TOY2
     fragment_id: 15
     starting_fragment_id: 15
     random_seed: 9738
-    sleep_on_stop_us: 500000 
+    sleep_on_stop_us: 500000
 
     # Generator-Specific Configuration:
-    
+
 request_mode: "Window" # Possible values are: Ignored, Single, Buffer, Window
 
-end_of_run_quiet_timeout_ms: 1000 # Time, in milliseconds, that the entire system must be quiet for check_stop to return true in request mode. 
+end_of_run_quiet_timeout_ms: 1000 # Time, in milliseconds, that the entire system must be quiet for check_stop to return true in request mode.
 
 data_buffer_depth_fragments: 1000
 data_buffer_depth_mb: 1000
@@ -53,22 +53,22 @@ timestamp_scale_factor: 1
 	routing_table_config: {
            ## True if using the Routing Manager
            use_routing_manager: true
-       
+
            ## Port that table updates should arrive on
            table_update_port: 35556  # default
-       
+
            ## Address that table updates should arrive on
            table_update_address: "227.128.12.28"  # default
-       
+
            ## Port that acknowledgements should be sent to
           table_acknowledge_port: 35557  # default
-       
+
            ## Host that acknowledgements should be sent to
            routing_manager_hostname: "localhost"  # default
-       
+
            ## Time to wait (in ms) for a routing table update if the table is exhausted
            routing_timeout_ms: 1000  # default
-       
+
            ## Number of times to retry getting destination from routing table
            routing_retry_count: 5  # default
        	}

@@ -1,6 +1,6 @@
 
 BEGIN {
-    
+
     in_artdaq_process_settings = 0
     in_subsystem_settings = 0
     in_user_defined_list = 0   # Need to account for users using lists as FHiCL overrides
@@ -45,7 +45,7 @@ BEGIN {
 	if ($0 ~ /^\s*\]\s*$/ ) {
 	    in_artdaq_process_settings = 0
 	    next
-	} else if ($0 ~ /^\s*\{\s*$/) {  
+	} else if ($0 ~ /^\s*\{\s*$/) {
               # Ignore "{"
 	} else if ( $0 ~ /^\s*\},?\s*$/ ) {   # "}" or "}," means process info ready
 	    for (procinfo_var in procinfo_vars) {
@@ -56,18 +56,18 @@ BEGIN {
 		if (procinfo_vars[ procinfo_var ] != "not set") {
 		    printf("\n%s %s: %s", procinfo_vars["name"], procinfo_var, procinfo_vars[ procinfo_var ] )
 		}
-	    } 
+	    }
 
 	    print "\n"
 	    for (procinfo_var in procinfo_vars) {
 		procinfo_vars[ procinfo_var ] = "not set"
-		
+
 	    }
 	} else {    # Expect this line to contain a process variable (host, label, etc.)
 	    gsub("\"", "", secondpart)
 	    procinfo_vars[firstpart] = secondpart
-	} 
-	
+	}
+
 	next
     }
 
@@ -81,7 +81,7 @@ BEGIN {
 	if ($0 ~ /^\s*\]\s*$/ ) {
 	    in_subsystem_settings = 0
 	    next
-	} else if ($0 ~ /^\s*\{\s*$/) {  
+	} else if ($0 ~ /^\s*\{\s*$/) {
               # Ignore "{"
 	} else if ( $0 ~ /^\s*\},?\s*$/ ) {   # "}" or "}," means process info ready
 	    for (subsysteminfo_var in subsysteminfo_vars) {
@@ -89,18 +89,18 @@ BEGIN {
 		if (subsysteminfo_vars[ subsysteminfo_var ] != "not set") {
 		    printf("\nSubsystem %s: %s", subsysteminfo_var, subsysteminfo_vars[ subsysteminfo_var ] )
 		}
-	    } 
+	    }
 
 	    print "\n"
 	    for (subsysteminfo_var in subsysteminfo_vars) {
 		subsysteminfo_vars[ subsysteminfo_var ] = "not set"
-		
+
 	    }
 	} else {    # Expect this line to contain a process variable (host, label, etc.)
 	    gsub("\"", "", secondpart)
 	    subsysteminfo_vars[firstpart] = secondpart
-	} 
-	
+	}
+
 	next
     }
 

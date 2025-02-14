@@ -4,7 +4,7 @@
 
 #   JCF, Aug-27-2019
 
-#   This sourcefile needs to be sourced before running DAQInterface. 
+#   This sourcefile needs to be sourced before running DAQInterface.
 
 #   Consequences of sourcing are:
 #
@@ -30,7 +30,7 @@
 #     in the environment ($USER), and within its body it must export an
 #     environment variable called "DAQINTERFACE_USER_SOURCEFILE_ERRNO"
 #     and set it to 0 to let this "parent" sourcefile know that the user
-#     sourcefile was sourced correctly. It also needs to set DAQINTERFACE_SETTINGS 
+#     sourcefile was sourced correctly. It also needs to set DAQINTERFACE_SETTINGS
 #     and DAQINTERFACE_KNOWN_BOARDREADERS_LIST.
 
 ######################################################################
@@ -58,7 +58,7 @@
 # -And that if users in their $DAQINTERFACE_USER_SOURCEFILE script
 # override DAQINTERFACE_PROCESS_MANAGEMENT_METHOD,
 # DAQINTERFACE_LOGDIR, DAQINTERFACE_PARTITION_NUMBER and
-# DAQINTERFACE_FHICL_DIRECTORY, that these variables get picked up 
+# DAQINTERFACE_FHICL_DIRECTORY, that these variables get picked up
 
 # -Make sure that typing "DAQInterface" after a successful sourcing of
 # this script launches DAQInterface, and that it uses the environment
@@ -87,7 +87,7 @@
 chmod 444 $ARTDAQ_DAQINTERFACE_DIR/source_me > /dev/null 2>&1
 
 function cleanup() {
-    
+
     export PATH=$( echo $PATH | sed -r 's!'${ARTDAQ_DAQINTERFACE_DIR}/bin':*!!'  )
 
     unset DAQINTERFACE_LOGDIR
@@ -126,13 +126,13 @@ else
 fi
 
 if [[ "$PWD" == "$ARTDAQ_DAQINTERFACE_DIR" ]]; then
-    
+
     cat<<EOF
 You appear to be trying to source this script within its own directory
 (i.e., within either the ups product directory or the git repo);
 please read the DAQInterface Manual at
 https://cdcvs.fnal.gov/redmine/projects/artdaq-utilities/wiki/Artdaq-daqinterface
-to learn how to properly set up the DAQInterface environment. 
+to learn how to properly set up the DAQInterface environment.
 EOF
 
     return 1
@@ -204,7 +204,7 @@ cat<<heredoc
 
 	ERROR: DAQINTERFACE_USER_SOURCEFILE environment variable has been
 	set, but the would-be sourcefile it refers to,
-	"$DAQINTERFACE_USER_SOURCEFILE", doesn't exist. 
+	"$DAQINTERFACE_USER_SOURCEFILE", doesn't exist.
 
 heredoc
 
@@ -241,7 +241,7 @@ heredoc
 fi
 
 if [[ -z $DAQINTERFACE_USER_SOURCEFILE_ERRNO ]] ; then
-    
+
 cat<<heredoc
 
       ERROR: the DAQINTERFACE_USER_SOURCEFILE_ERRNO environment
@@ -272,7 +272,7 @@ heredoc
 fi
 
 if [[ -n $DAQINTERFACE_SETTINGS ]]; then
-    
+
     if [[ ! -e $DAQINTERFACE_SETTINGS ]]; then
 
 	echo "ERROR: the DAQINTERFACE_SETTINGS environment variable doesn't point to a file which exists"
@@ -377,11 +377,11 @@ export DAQINTERFACE_LOGFILE=$DAQINTERFACE_LOGDIR/DAQInterface_partition\${DAQINT
 cat<<EOF
 * The command was successful
 * To launch, just type "DAQInterface &" (excluding quotes, ampersand optional)
-* Output will be logged in ${DAQINTERFACE_LOGDIR}/DAQInterface_partition<N>.log, where <N> 
+* Output will be logged in ${DAQINTERFACE_LOGDIR}/DAQInterface_partition<N>.log, where <N>
   is the partition the DAQInterface instance is on
 * You're encouraged to read the DAQInterface Manual at https://cdcvs.fnal.gov/redmine/projects/artdaq-utilities/wiki/Artdaq-daqinterface
 EOF
- 
+
 echo
 
 export DAQINTERFACE_STANDARD_SOURCEFILE_SOURCED=true

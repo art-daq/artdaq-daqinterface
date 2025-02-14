@@ -38,12 +38,12 @@ if [[ "$method" == "pmt" && -n $files ]]; then
 		else
 		    cat <<EOF
 
-$metadata_file lists 
-$filename 
+$metadata_file lists
+$filename
 as being on this host but it doesn't appear to exist (any longer)
 
 EOF
-		    
+
 		fi
 	    else
 		echo "Ability to examine logfile on remote host (\"$logfile\") not yet implemented"
@@ -59,7 +59,7 @@ EOF
 else
 
 
-    
+
     cat>&2<<EOF
 
     Unable to find the process manager logfile for run $runnum; this

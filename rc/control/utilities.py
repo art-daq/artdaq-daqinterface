@@ -1245,7 +1245,7 @@ def get_setup_commands(productsdir=None, spackdir=None, log_file=None):
                 bash_unsetup_command + " > /dev/null 2>&1 "
         )
     elif spackdir != None:
-        output.append("export SPACK_DISABLE_LOCAL_CONFIG=true")        
+        output.append("export SPACK_DISABLE_LOCAL_CONFIG=true")
         if log_file == None:
             output.append('. %s/share/spack/setup-env.sh' % (spackdir))
         else:

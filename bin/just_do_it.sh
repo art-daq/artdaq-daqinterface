@@ -38,7 +38,7 @@ while [ -n "${1-}" ];do
             v*|-verbose) eval $op1chr; opt_verbose=1;;
             -config)    eval $reqarg; config=$1; shift;;
             -comps)     eval $reqarg; comp_mode=1 daqcomps=$1; shift;;
-            -compfile)  eval $reqarg; comp_file=$1; shift;;  
+            -compfile)  eval $reqarg; comp_file=$1; shift;;
             -runduration) eval $reqarg; time_override=$1; shift;;
             -bootfile)  eval $reqarg; boot_file=$1; shift;;
 	    -runs)      eval $reqarg; runs=$1; shift;;
@@ -133,12 +133,12 @@ trap "end_running" SIGHUP SIGINT SIGTERM
 
 daqutils_script=$scriptdir/daqutils.sh
 
-if ! [[ -e $daqutils_script ]]; then 
+if ! [[ -e $daqutils_script ]]; then
      echo $(date) "Unable to source $daqutils_script - script not found" >&2
      exit 30
-else   
+else
      . $daqutils_script
-fi   
+fi
 
 
 # And now define the main body of code (this function is not actually
@@ -151,7 +151,7 @@ function main() {
     res=$( ps aux | grep -E "python.*daqinterface.py" | grep -v grep )
 
     if [[ -z $res ]]; then
-	echo 
+	echo
 	echo "DAQInterface does not appear to be running, will exit.." >&2
 	exit 40
     fi
@@ -199,8 +199,8 @@ function main() {
     # Initialize the DAQ
 
     config_cntr=0
-    
-    while (( $config_cntr < 1 )); do 
+
+    while (( $config_cntr < 1 )); do
 
 	config_cntr=$(( config_cntr + 1 ))
     vcmd $scriptdir/send_transition.sh config $config
@@ -238,7 +238,7 @@ function main() {
 			exit 70
 		fi
 
-    
+
 		if [[ $daq_time_in_seconds > 0 ]]; then
 			echo "Will acquire data for $daq_time_in_seconds seconds"
 			sleep $daq_time_in_seconds
@@ -248,7 +248,7 @@ function main() {
 		fi
 
 		# Stop the DAQ
-    
+
 		state_true="0"
 		check_for_state "running" state_true
 
@@ -288,9 +288,9 @@ function main() {
 function check_output_file() {
 
     local runtoken=$( awk 'BEGIN{ printf("r%06d", '$runnum')}' )
-    
+
     local glob=$root_output_dir/*${runtoken}*.root
-    local output_file=$( ls -tr1 $glob | tail -1 )    
+    local output_file=$( ls -tr1 $glob | tail -1 )
 
     if [[ -n $output_file ]]; then
 	ls -l $output_file
@@ -309,7 +309,7 @@ function check_run_records() {
     fi
 
     echo "Contents of $recorddir/$runnum :"
-    ls -ltr $recorddir/$runnum 
+    ls -ltr $recorddir/$runnum
 }
 
 main $@

@@ -15,13 +15,13 @@ writes them to disk and forwards them to Dispatcher1.
 
 Some notes:
 * This configuration needs an enhanced copy of the boot.txt file, and a
-  sample is included with this configuration.  It also needs a special 
+  sample is included with this configuration.  It also needs a special
   known_boardreaders_list, and that is also provided here.
   To run this demo, you can use the following commands:
   - 'cd <yourArtdaqDemoDir>'
   - 'sh ./run_demo.sh --config simple_subsystems --bootfile `pwd`/artdaq-utilities-daqinterface/simple_test_config/simple_subsystems/boot.txt --comps component01 component02 component03 -- --brlist `pwd`/artdaq-utilities-daqinterface/simple_test_config/simple_subsystems/known_boardreaders_list_example'
 
-* NOTE that the pull-mode data requests that are used in this sample make use of 
+* NOTE that the pull-mode data requests that are used in this sample make use of
   multicast Ethernet messages.  As such, there may
   be firewall settings that need to be tuned.  Please see the text that describes
   this in ../README.simple_test_configs.

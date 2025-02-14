@@ -27,7 +27,7 @@ multicast_interface_ip: "0.0.0.0"
       uniquify: true
     }
   }
-} 
+}
 
 eventbuilder_art_standard: {
   services: {
@@ -46,9 +46,9 @@ eventbuilder_art_standard: {
   physics: {
     analyzers: {
       fragmentwatcher: {
-        module_type: FragmentWatcher 
-        metrics_reporting_level: 1 
-        mode_bitmask: 0x7 
+        module_type: FragmentWatcher
+        metrics_reporting_level: 1
+        mode_bitmask: 0x7
       }
     }
 

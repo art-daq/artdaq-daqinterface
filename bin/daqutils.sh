@@ -15,17 +15,17 @@ if [[ -z $scriptdir ]]; then
     scriptdir="$(dirname "$0")"
 fi
 
-function check_for_state() {                                                                                          
-    local stateName=$1                                                                                                
-    local __stateBoolVarname=$2                                                                                       
-    local stateTrue="0"                                                                              
+function check_for_state() {
+    local stateName=$1
+    local __stateBoolVarname=$2
+    local stateTrue="0"
     status_script=$scriptdir/status.sh
 
     res=$( $status_script  | tail -1 | tr "'" " " | awk '{print $2}' )
 
-    if [[ "$res" == "$stateName" ]]; then                                                                             
-	stateTrue="1"                                                                                                   
-    fi                                                                                                            
+    if [[ "$res" == "$stateName" ]]; then
+	stateTrue="1"
+    fi
     eval $__stateBoolVarname="'$stateTrue'"
 }
 
@@ -33,18 +33,18 @@ function check_for_state() {
 # "lbnecmd check" that the DAQ is no longer in the state passed to it
 # as an argument
 
-function wait_until_no_longer() {                                                                                      
-    local state=$1                                                                                             
-    
-    while [[ "1" ]]; do                                                                                            
-      sleep 1                                                                                              
+function wait_until_no_longer() {
+    local state=$1
+
+    while [[ "1" ]]; do
+      sleep 1
       still_in_state="0"
-        
+
       check_for_state $state still_in_state
 
       if [[ "$still_in_state" != "1" ]]; then
 	  break
-      fi       
- 
-    done                                                                                                      
+      fi
+
+    done
 }

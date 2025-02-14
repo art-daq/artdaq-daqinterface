@@ -6,7 +6,7 @@ if [[ ! -e $DAQINTERFACE_SETTINGS ]]; then
 fi
 
 recorddir=$( sed -r -n 's/^\s*record[_ ]directory\s*:\s*(\S+).*/\1/p' $DAQINTERFACE_SETTINGS )
-recorddir=$( echo $( eval echo $recorddir ) )  # Expand environ variables in string     
+recorddir=$( echo $( eval echo $recorddir ) )  # Expand environ variables in string
 
 function file_locations() {
 

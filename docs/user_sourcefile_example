@@ -4,9 +4,9 @@ export DAQINTERFACE_KNOWN_BOARDREADERS_LIST=$ARTDAQ_DAQINTERFACE_DIR/docs/known_
 export DAQINTERFACE_FHICL_DIRECTORY=$ARTDAQ_DAQINTERFACE_DIR/simple_test_config
 
 if [[ "$DAQINTERFACE_FHICL_DIRECTORY" == "IGNORED" ]]; then
- 
+
    echo "Put code here which sets up the database environment"
- 
+
 fi
 
 # What the syntax below means is that DAQINTERFACE_LOGDIR only gets set if it's not already set

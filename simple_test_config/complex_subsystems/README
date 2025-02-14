@@ -6,7 +6,7 @@ This configuration is intended to demonstrate/test the use of a multi-layer
 artdaq system, that is, a system with multiple subsystems.  The current system
 layout has components 1, 2 and 3 sending fragments to EBs 1 and 2.  All of that is in subsystem #1.
 
-The main difference between this configuration and simple_subsystems is that EventBuilder1 and EB2 send serialized art events to EventBuilder3, 
+The main difference between this configuration and simple_subsystems is that EventBuilder1 and EB2 send serialized art events to EventBuilder3,
 which then adds the Fragments from component_subsystem_2. (In simple_subsystems, EB1 and EB2 forward the Fragments they receive from component01-03.)
 
 EBs 1 and 2 also send their data to EB3 in subsystem 2.
@@ -17,13 +17,13 @@ writes them to disk and forwards them to Dispatcher1.
 
 Some notes:
 * This configuration needs an enhanced copy of the boot.txt file, and a
-  sample is included with this configuration.  It also needs a special 
+  sample is included with this configuration.  It also needs a special
   known_boardreaders_list, and that is also provided here.
   To run this demo, you can use the following commands:
   - 'cd <yourArtdaqDemoDir>'
   - 'sh ./run_integration_tests.sh --config complex_subsystems'
 
-* NOTE that the pull-mode data requests that are used in this sample make use of 
+* NOTE that the pull-mode data requests that are used in this sample make use of
   multicast Ethernet messages.  As such, there may
   be firewall settings that need to be tuned.  Please see the text that describes
   this in ../README.simple_test_configs.

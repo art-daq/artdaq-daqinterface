@@ -19,7 +19,7 @@ Some notes:
 * Note that you will also need to install the known_boardreader_list_example included with this
   example to use all 24 components
 
-* NOTE that the pull-mode data requests that are used in this sample make use of 
+* NOTE that the pull-mode data requests that are used in this sample make use of
   multicast Ethernet messages.  As such, there may
   be firewall settings that need to be tuned.  Please see the text that describes
   this in ../README.simple_test_configs.

@@ -4,7 +4,7 @@ Notes on 18-Mar-2019, ELF
 Description:
 This configuration is intended to demonstrate/test the use of a multi-layer
 artdaq system, that is, a system with multiple subsystems.  The current system
-layout has components 1, 2 and 3 sending fragments to EB 1 in subsystem #1, 
+layout has components 1, 2 and 3 sending fragments to EB 1 in subsystem #1,
 component_subsystem_2 sending to EB2 in subsystem 2 along with serialized art
 events from EB1, component_subsystem_3 sending to EB3 in subsystem 3, and EB2
 and EB3 sending serialized art events to EB4 in subsystem 4. DL1 and DI1 are
@@ -12,14 +12,13 @@ also in subsystem 4, writing data to disk and running online monitoring.
 
 Some notes:
 * This configuration needs an enhanced copy of the boot.txt file, and a
-  sample is included with this configuration.  It also needs a special 
+  sample is included with this configuration.  It also needs a special
   known_boardreaders_list, and that is also provided here.
   To run this demo, you can use the following commands:
   - 'cd <yourArtdaqDemoDir>'
   - 'sh ./run_integration_tests.sh --config complicated_subsystems'
 
-* NOTE that the pull-mode data requests that are used in this sample make use of 
+* NOTE that the pull-mode data requests that are used in this sample make use of
   multicast Ethernet messages.  As such, there may
   be firewall settings that need to be tuned.  Please see the text that describes
   this in ../README.simple_test_configs.
-  

@@ -324,9 +324,9 @@ component2002 mu2edaq01
 component2003 mu2edaq01
 component_one_event_per_subrun	 mu2edaq01
 component_throws_exception       mu2edaq01
-component_dies_from_exit	 mu2edaq01	
+component_dies_from_exit	 mu2edaq01
 component_dies_from_abort 	 mu2edaq01
-component_hangs			 mu2edaq01	
+component_hangs			 mu2edaq01
 component_fragment_size_blows_up mu2edaq01
 component_buffer_mode mu2edaq01
 component_throws_exception_on_config mu2edaq01

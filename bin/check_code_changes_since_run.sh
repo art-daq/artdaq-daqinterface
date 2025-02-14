@@ -22,13 +22,13 @@ sourced_daq_setup_script=false
 
 awk '/commit\/version/ ' $recorddir/$runnum/metadata.txt | while read line; do
     package=$( echo $line | awk '{print $1}' )
-    
+
     if [[ $package =~ DAQInterface ]]; then
 	continue
     fi
 
     package_underscored=$( echo $package | sed -r 's/-/_/g' )
-    
+
     hash_or_version=$( echo $line | awk '{print $3}' )
     locs_added=$( echo $line | awk '{print $4}' )
     locs_subtracted=$( echo $line | awk '{print $5}' )
@@ -38,7 +38,7 @@ awk '/commit\/version/ ' $recorddir/$runnum/metadata.txt | while read line; do
 	repo_dir=""
 
 	if [[ -e $daq_dir/srcs/$package ]]; then
-	    repo_dir=$daq_dir/srcs/$package 
+	    repo_dir=$daq_dir/srcs/$package
 	elif [[ -d $daq_dir/srcs/$package_underscored ]]; then
 	    repo_dir=$daq_dir/srcs/$package_underscored
 	else
@@ -57,17 +57,17 @@ EOF
 	fi
 
 
-	
+
 	cd $repo_dir
 	hash_and_comment=$( git log --pretty=oneline -1 )
 	discovered_hash=$( echo $hash_and_comment | awk '{print $1}' )
-	
+
 	if [[ $discovered_hash != $hash_or_version ]]; then
 
 	    cat <<EOF
 
 Commit hash for $package package is different between that used for
-run $runnum and the current git repo, $repo_dir: 
+run $runnum and the current git repo, $repo_dir:
 
 EOF
 
@@ -76,14 +76,14 @@ EOF
 	    echo "Current repo: "
 	    echo $hash_and_comment
 	fi
-	
+
     else
-	
+
 	type unsetup > /dev/null >& /dev/null
 
 	if [[ "$?" == "0" ]]; then
-	    for pp in `printenv | sed -ne "/^SETUP_/{s/SETUP_//;s/=.*//;p}"`; do 
-		test $pp = UPS && continue; prod=`echo $pp | tr "A-Z" "a-z"`; unsetup -j $prod; 
+	    for pp in `printenv | sed -ne "/^SETUP_/{s/SETUP_//;s/=.*//;p}"`; do
+		test $pp = UPS && continue; prod=`echo $pp | tr "A-Z" "a-z"`; unsetup -j $prod;
 	    done
 	fi
 
@@ -95,7 +95,7 @@ EOF
 	    cat <<EOF
 
 Version of $package package is different between that used for
-run $runnum and the version currently setup by the setup script $daq_setup_script: 
+run $runnum and the version currently setup by the setup script $daq_setup_script:
 
 EOF
 
@@ -105,7 +105,7 @@ EOF
 	    echo $discovered_version
 	fi
     fi
- 
+
 done
 
 exit 0

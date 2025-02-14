@@ -20,11 +20,11 @@ component18 localhost -1 1
 component19 localhost -1 1
 component1000 localhost -1 1
 component1001 localhost -1 1
-component_one_event_per_subrun localhost 
-component_throws_exception localhost	
-component_dies_from_exit localhost 	
-component_dies_from_abort localhost 	
-component_hangs localhost 		
+component_one_event_per_subrun localhost
+component_throws_exception localhost
+component_dies_from_exit localhost
+component_dies_from_abort localhost
+component_hangs localhost
 component_fragment_size_blows_up localhost
 component_buffer_mode localhost
 component_throws_exception_on_config localhost

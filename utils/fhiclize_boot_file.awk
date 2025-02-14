@@ -74,10 +74,10 @@ function chk_sys_subsys()
        next
     }
 
-   # And blank lines, also interpreting them as the delimiter for a given 
+   # And blank lines, also interpreting them as the delimiter for a given
    # process's collection of info
 
-    match($0, "^\\s*$")  
+    match($0, "^\\s*$")
     if (RSTART != 0) {
 		chk_sys_subsys()
 	next
@@ -89,7 +89,7 @@ function chk_sys_subsys()
 
     if (RSTART == 0) {
 	next
-    } else { 
+    } else {
 	firstpart=substr($0, 1, RSTART-1);
 	secondpart=substr($0, RSTART+1);
 
@@ -102,7 +102,7 @@ function chk_sys_subsys()
 
 	for (subsystem_token in subsystem_tokens) {
 	    keymatch = sprintf("Subsystem_%s", subsystem_token)
-	    
+
 	    if (firstpart ~ keymatch) {
 		if (subsystem_token == "id") {
 		    id = secondpart
@@ -125,7 +125,7 @@ function chk_sys_subsys()
 		    if (process_token == "label") {
 			label = secondpart
 		    } else if (process_token == "host" ) {
-			host = secondpart 
+			host = secondpart
 		    } else if ( process_token == "port" ) {
 			port = secondpart
 		    } else if ( process_token == "subsystem" ) {
