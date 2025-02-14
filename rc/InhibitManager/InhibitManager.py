@@ -141,4 +141,3 @@ class InhibitManager:
             if diff.total_seconds()>self.update_freq:
                  publisher.send_inhibit_msg(self.status(),"no change")
                  timelast = timenow
-

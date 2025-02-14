@@ -140,6 +140,3 @@ BEGIN {
     # Printing the line as-is will handle bespoke FHiCL parameter overrides
     print
 }
-
-
-

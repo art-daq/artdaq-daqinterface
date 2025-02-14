@@ -41,4 +41,3 @@ Dispatcher subsystem: 2
 RoutingManager host: mu2edaq14-data
 RoutingManager label: RoutingManager1
 RoutingManager subsystem: 1
-

@@ -1,7 +1,7 @@
 BEGIN_PROLOG
 
 component_standard: {
-    fragment_receiver: {
+	fragment_receiver: {
 	# CommandableFragmentGenerator Configuration:
 	fragment_ids: []
 	fragment_id: -99 # Please define only one of these
@@ -50,39 +50,39 @@ hardware_poll_interval_us: 0 # How often, in microseconds, checkHWStatus_() shou
 	destinations: {	}
 
 	routing_table_config: {
-           ## True if using the Routing Manager
-           use_routing_manager: true
+		   ## True if using the Routing Manager
+		   use_routing_manager: true
 
-           ## Port that table updates should arrive on
-           table_update_port: 35556  # default
+		   ## Port that table updates should arrive on
+		   table_update_port: 35556  # default
 
-           ## Address that table updates should arrive on
-           table_update_address: "227.128.12.28"  # default
+		   ## Address that table updates should arrive on
+		   table_update_address: "227.128.12.28"  # default
 
-           ## Port that acknowledgements should be sent to
-          table_acknowledge_port: 35557  # default
+		   ## Port that acknowledgements should be sent to
+		  table_acknowledge_port: 35557  # default
 
-           ## Host that acknowledgements should be sent to
-           routing_manager_hostname: "localhost"  # default
-            table_update_multicast_interface: "0.0.0.0"
+		   ## Host that acknowledgements should be sent to
+		   routing_manager_hostname: "localhost"  # default
+			table_update_multicast_interface: "0.0.0.0"
 
-           ## Time to wait (in ms) for a routing table update if the table is exhausted
-           routing_timeout_ms: 2000  # default 1000
+		   ## Time to wait (in ms) for a routing table update if the table is exhausted
+		   routing_timeout_ms: 2000  # default 1000
 
-           ## Number of times to retry getting destination from routing table
-           routing_retry_count: 5  # default
-       	}
-    }
-
-    metrics: {
-	brFile: {
-	    metricPluginType: "file"
-	    level: 4
-	    fileName: "boardreader/br_%UID%_metrics.log"
-         absolute_file_path: false
-	    uniquify: true
+		   ## Number of times to retry getting destination from routing table
+		   routing_retry_count: 5  # default
+		}
 	}
-    }
+
+	metrics: {
+	brFile: {
+		metricPluginType: "file"
+		level: 4
+		fileName: "boardreader/br_%UID%_metrics.log"
+		 absolute_file_path: false
+		uniquify: true
+	}
+	}
 }
 
 component01_standard: @local::component_standard

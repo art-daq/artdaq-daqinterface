@@ -4,69 +4,69 @@ BEGIN_PROLOG
 
 eventbuilder_daq_standard: {
   event_builder: {
-    expected_fragments_per_event: 0  # Will be set by DAQInterface
-    use_art: true
-    buffer_count: 5
-    max_incomplete_events: 75 # Same as boardreader sync interval
-    verbose: true
-    send_requests: true
+	expected_fragments_per_event: 0  # Will be set by DAQInterface
+	use_art: true
+	buffer_count: 5
+	max_incomplete_events: 75 # Same as boardreader sync interval
+	verbose: true
+	send_requests: true
 multicast_interface_ip: "0.0.0.0"
-    request_port: 3001
-    request_address: "227.128.12.26" # Multicast request address
+	request_port: 3001
+	request_address: "227.128.12.26" # Multicast request address
 
-    routing_token_config: @local::subsystem2_routing_token_specification
+	routing_token_config: @local::subsystem2_routing_token_specification
 
-    sources: { }
+	sources: { }
   }
   metrics: {
-    evbFile: {
-      metricPluginType: "file"
-      level: 4
-      fileName: "eventbuilder/evb_%UID%_metrics.log"
-         absolute_file_path: false
-      uniquify: true
-    }
+	evbFile: {
+	  metricPluginType: "file"
+	  level: 4
+	  fileName: "eventbuilder/evb_%UID%_metrics.log"
+		 absolute_file_path: false
+	  uniquify: true
+	}
   }
 }
 
 eventbuilder_art_standard: {
   services: {
-    ArtdaqSharedMemoryServiceInterface: {
-      service_provider: ArtdaqSharedMemoryService
-    }
-  	ArtdaqFragmentNamingServiceInterface: { service_provider: ArtdaqFragmentNamingService helper_plugin: "ArtdaqDemo" }
+	ArtdaqSharedMemoryServiceInterface: {
+	  service_provider: ArtdaqSharedMemoryService
+	}
+	ArtdaqFragmentNamingServiceInterface: { service_provider: ArtdaqFragmentNamingService helper_plugin: "ArtdaqDemo" }
   }
 
   source: {
-    module_type: ArtdaqInput
-    waiting_time: 2500000
-    resume_after_timeout: true
+	module_type: ArtdaqInput
+	waiting_time: 2500000
+	resume_after_timeout: true
   }
 
   physics: {
-    analyzers: {
-      fragmentwatcher: {
-        module_type: FragmentWatcher
-        metrics_reporting_level: 1
-        mode_bitmask: 0x7
-      }
-    }
+	analyzers: {
+	  fragmentwatcher: {
+		module_type: FragmentWatcher
+		metrics_reporting_level: 1
+		mode_bitmask: 0x7
+	  }
+	}
 
-    producers: { }
+	producers: { }
 
-    filters: { }
+	filters: { }
 
-    a1: [ fragmentwatcher ]
-    my_output_modules: [ rootNetOutput ]
+	a1: [ fragmentwatcher ]
+	my_output_modules: [ rootNetOutput ]
   }
 
   outputs: {
-    rootNetOutput: {
-      module_type: RootNetOutput
-      #SelectEvents: { SelectEvents: [ pmod2,pmod3 ] }
-      #broadcast_sends: true
-      destinations: { }
-    }
+	rootNetOutput: {
+	  module_type: RootNetOutput
+	  #SelectEvents: { SelectEvents: [ pmod2,pmod3 ] }
+	  #broadcast_sends: true
+	  destinations: { }
+	}
   }
   process_name: DAQ
 }

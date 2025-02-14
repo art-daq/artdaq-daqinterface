@@ -26,13 +26,3 @@ done
 echo $file_locations
 
 }
-
-
-
-
-
-
-
-
-
-

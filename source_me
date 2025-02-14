@@ -88,18 +88,18 @@ chmod 444 $ARTDAQ_DAQINTERFACE_DIR/source_me > /dev/null 2>&1
 
 function cleanup() {
 
-    export PATH=$( echo $PATH | sed -r 's!'${ARTDAQ_DAQINTERFACE_DIR}/bin':*!!'  )
+	export PATH=$( echo $PATH | sed -r 's!'${ARTDAQ_DAQINTERFACE_DIR}/bin':*!!'  )
 
-    unset DAQINTERFACE_LOGDIR
-    unset DAQINTERFACE_LOGFILE
-    unset DAQINTERFACE_USER_SOURCEFILE_ERRNO
-    unset DAQINTERFACE_STANDARD_SOURCEFILE_SOURCED
-    unset DAQINTERFACE_TTY
-    unset DAQINTERFACE_PORT
+	unset DAQINTERFACE_LOGDIR
+	unset DAQINTERFACE_LOGFILE
+	unset DAQINTERFACE_USER_SOURCEFILE_ERRNO
+	unset DAQINTERFACE_STANDARD_SOURCEFILE_SOURCED
+	unset DAQINTERFACE_TTY
+	unset DAQINTERFACE_PORT
 
-    unalias DAQInterface
+	unalias DAQInterface
 
-    cat<<EOF
+	cat<<EOF
 
 n.b. As there's no guarantee your environment is the same as before
 this unsucessful source attempt, it's recommended you enter a clean
@@ -117,17 +117,17 @@ fi
 
 if [[ -n $ARTDAQ_DAQINTERFACE_VERSION ]] ; then
 
-    echo "Using ups-installed DAQInterface, version \"$ARTDAQ_DAQINTERFACE_VERSION\""
+	echo "Using ups-installed DAQInterface, version \"$ARTDAQ_DAQINTERFACE_VERSION\""
 
 else
 
-    echo "DAQInterface does not appear to have been set up as a ups product; will do nothing"
-    return 1
+	echo "DAQInterface does not appear to have been set up as a ups product; will do nothing"
+	return 1
 fi
 
 if [[ "$PWD" == "$ARTDAQ_DAQINTERFACE_DIR" ]]; then
 
-    cat<<EOF
+	cat<<EOF
 You appear to be trying to source this script within its own directory
 (i.e., within either the ups product directory or the git repo);
 please read the DAQInterface Manual at
@@ -135,7 +135,7 @@ https://cdcvs.fnal.gov/redmine/projects/artdaq-utilities/wiki/Artdaq-daqinterfac
 to learn how to properly set up the DAQInterface environment.
 EOF
 
-    return 1
+	return 1
 fi
 
 # Eric F: "I hacked all my code on a host with no name"
@@ -180,24 +180,24 @@ export PATH=$ARTDAQ_DAQINTERFACE_DIR/bin:$PATH
 if [[ -n $DAQINTERFACE_USER_SOURCEFILE ]]; then
 
    if [[ "$DAQINTERFACE_USER_SOURCEFILE" != "IGNORED" && -e $DAQINTERFACE_USER_SOURCEFILE ]]; then
-       user_sourcefile_owner=$( ls -l $DAQINTERFACE_USER_SOURCEFILE | awk '{print $3}' )
+	   user_sourcefile_owner=$( ls -l $DAQINTERFACE_USER_SOURCEFILE | awk '{print $3}' )
 
-       if [[ "$user_sourcefile_owner" == "$USER" ]]; then
-       	  . $DAQINTERFACE_USER_SOURCEFILE
-       else
+	   if [[ "$user_sourcefile_owner" == "$USER" ]]; then
+		  . $DAQINTERFACE_USER_SOURCEFILE
+	   else
 
 cat<<heredoc
 
 	   ERROR: Current user "$USER" is not the same as the owner of
-           ${DAQINTERFACE_USER_SOURCEFILE}; source of
-           $DAQINTERFACE_USER_SOURCEFILE will not take place
+		   ${DAQINTERFACE_USER_SOURCEFILE}; source of
+		   $DAQINTERFACE_USER_SOURCEFILE will not take place
 
 heredoc
 
-           cleanup
-           return 1
+		   cleanup
+		   return 1
 
-       fi
+	   fi
    elif [[ "$DAQINTERFACE_USER_SOURCEFILE" != "IGNORED" && ! -e $DAQINTERFACE_USER_SOURCEFILE ]]; then
 
 cat<<heredoc
@@ -208,20 +208,20 @@ cat<<heredoc
 
 heredoc
 
-        cleanup
+		cleanup
 	return 1
    else   # $DAQINTERFACE_USER_SOURCEFILE == IGNORED, so we don't source a user-defined script
 
 cat<<EOF
 
-       ERROR: DAQINTERFACE_USER_SOURCEFILE environment variable has
-       been set to "IGNORED"; while previously this meant that this
-       script would not source a user-defined script referred to by
-       the DAQINTERFACE_USER_SOURCEFILE variable, this option is now
-       deprecated
+	   ERROR: DAQINTERFACE_USER_SOURCEFILE environment variable has
+	   been set to "IGNORED"; while previously this meant that this
+	   script would not source a user-defined script referred to by
+	   the DAQINTERFACE_USER_SOURCEFILE variable, this option is now
+	   deprecated
 
 EOF
-         cleanup
+		 cleanup
 	 return 1
    fi
 
@@ -244,46 +244,46 @@ if [[ -z $DAQINTERFACE_USER_SOURCEFILE_ERRNO ]] ; then
 
 cat<<heredoc
 
-      ERROR: the DAQINTERFACE_USER_SOURCEFILE_ERRNO environment
-      variable doesn't exist; this needs to be set in the user script
-      referred to by the DAQINTERFACE_USER_SOURCEFILE environment
-      variable. Setting the variable to "0" in
-      $DAQINTERFACE_USER_SOURCEFILE implies success, anything else
-      implies a failure and this script will consequently *not* set up
-      the DAQInterface environment.
+	  ERROR: the DAQINTERFACE_USER_SOURCEFILE_ERRNO environment
+	  variable doesn't exist; this needs to be set in the user script
+	  referred to by the DAQINTERFACE_USER_SOURCEFILE environment
+	  variable. Setting the variable to "0" in
+	  $DAQINTERFACE_USER_SOURCEFILE implies success, anything else
+	  implies a failure and this script will consequently *not* set up
+	  the DAQInterface environment.
 
 heredoc
 
-    cleanup
-    return 1
+	cleanup
+	return 1
 
 elif [[ "$DAQINTERFACE_USER_SOURCEFILE_ERRNO" != "0" ]] ; then
 
 cat<<heredoc
 
-      ERROR: the DAQINTERFACE_USER_SOURCEFILE_ERRNO environment
-      variable was set by the user-defined source script
-      "$DAQINTERFACE_USER_SOURCEFILE" with a value of
-      $DAQINTERFACE_USER_SOURCEFILE_ERRNO; anything nonzero is considered to be an error.
+	  ERROR: the DAQINTERFACE_USER_SOURCEFILE_ERRNO environment
+	  variable was set by the user-defined source script
+	  "$DAQINTERFACE_USER_SOURCEFILE" with a value of
+	  $DAQINTERFACE_USER_SOURCEFILE_ERRNO; anything nonzero is considered to be an error.
 heredoc
 
-     cleanup
-     return 1
+	 cleanup
+	 return 1
 fi
 
 if [[ -n $DAQINTERFACE_SETTINGS ]]; then
 
-    if [[ ! -e $DAQINTERFACE_SETTINGS ]]; then
+	if [[ ! -e $DAQINTERFACE_SETTINGS ]]; then
 
 	echo "ERROR: the DAQINTERFACE_SETTINGS environment variable doesn't point to a file which exists"
 	cleanup
 	return 1
-    fi
+	fi
 
-    export DAQINTERFACE_SETUP_FHICLCPP=$( dirname $DAQINTERFACE_SETTINGS )/.setup_fhiclcpp
+	export DAQINTERFACE_SETUP_FHICLCPP=$( dirname $DAQINTERFACE_SETTINGS )/.setup_fhiclcpp
 else
 
-    cat<<EOF
+	cat<<EOF
 
 ERROR: the environment variable DAQINTERFACE_SETTINGS hasn't been
 defined in $DAQINTERFACE_USER_SOURCEFILE. Please read the DAQInterface
@@ -313,7 +313,7 @@ if [[ -z $DAQINTERFACE_PROCESS_MANAGEMENT_METHOD ]]; then
 fi
 
 if [[ -z $DAQINTERFACE_KNOWN_BOARDREADERS_LIST ]]; then
-    cat<<EOF
+	cat<<EOF
 
 ERROR: the environment variable DAQINTERFACE_KNOWN_BOARDREADERS_LIST
 hasn't been defined in $DAQINTERFACE_USER_SOURCEFILE. Please read the
@@ -328,16 +328,16 @@ return 1
 
 elif [[ ! -e $DAQINTERFACE_KNOWN_BOARDREADERS_LIST ]]; then
 
-    echo "ERROR: the DAQINTERFACE_KNOWN_BOARDREADERS_LIST environment variable doesn't point to a file which exists"
-    cleanup
-    return 1
+	echo "ERROR: the DAQINTERFACE_KNOWN_BOARDREADERS_LIST environment variable doesn't point to a file which exists"
+	cleanup
+	return 1
 fi
 
 if [[ -z $DAQINTERFACE_FHICL_DIRECTORY ]]; then
 
-    export DAQINTERFACE_FHICL_DIRECTORY="$PWD/simple_test_config"
+	export DAQINTERFACE_FHICL_DIRECTORY="$PWD/simple_test_config"
 
-    cat<<EOF
+	cat<<EOF
 
 WARNING: the environment variable DAQINTERFACE_FHICL_DIRECTORY hasn't
 been defined in $DAQINTERFACE_USER_SOURCEFILE, so we're going to
@@ -387,4 +387,3 @@ echo
 export DAQINTERFACE_STANDARD_SOURCEFILE_SOURCED=true
 
 return 0
-

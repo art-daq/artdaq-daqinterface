@@ -8,4 +8,3 @@ if (($num_daqinterfaces > 0 )); then
 else
     echo "No instances of DAQInterface are up"
 fi
-

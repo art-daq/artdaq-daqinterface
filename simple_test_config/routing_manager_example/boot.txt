@@ -20,4 +20,3 @@ Dispatcher label: Dispatcher1
 
 RoutingManager host: localhost
 RoutingManager label: RoutingManager1
-

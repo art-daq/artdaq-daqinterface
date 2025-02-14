@@ -81,5 +81,3 @@ else
     echo $output
     exit 1
 fi
-
-

@@ -1,74 +1,74 @@
 daq: {
   aggregator: {
-    expected_events_per_bunch: 1
-    event_queue_depth: 40
-    event_queue_wait_time: 5
-    buffer_count: 20
-    onmon_event_prescale: 1
-    is_data_logger: true
-    expected_art_event_processing_time_us: 60000000
+	expected_events_per_bunch: 1
+	event_queue_depth: 40
+	event_queue_wait_time: 5
+	buffer_count: 20
+	onmon_event_prescale: 1
+	is_data_logger: true
+	expected_art_event_processing_time_us: 60000000
 
-    auto_suppression_enabled: false
+	auto_suppression_enabled: false
 
-    sources: { }
+	sources: { }
   }
 
   metrics: {
-    aggFile: {
-      metricPluginType: "file"
-      level: 4
-      fileName: "aggregator/agg_%UID%_metrics.log"
-         absolute_file_path: false
-      uniquify: true
-    }
+	aggFile: {
+	  metricPluginType: "file"
+	  level: 4
+	  fileName: "aggregator/agg_%UID%_metrics.log"
+		 absolute_file_path: false
+	  uniquify: true
+	}
   }
 }
 
 art: {
   services: {
-    ArtdaqSharedMemoryServiceInterface: {
-      service_provider: ArtdaqSharedMemoryService
-    }
+	ArtdaqSharedMemoryServiceInterface: {
+	  service_provider: ArtdaqSharedMemoryService
+	}
 	ArtdaqFragmentNamingServiceInterface: { service_provider: ArtdaqFragmentNamingService helper_plugin: "ArtdaqDemo" }
   }
 
   source: {
-    module_type: ArtdaqInput
+	module_type: ArtdaqInput
   }
 
   physics: {
-    analyzers: { }
+	analyzers: { }
 
-    producers: {
-      BuildInfo:
-      {
-        module_type: ArtdaqDemoBuildInfo
-        instance_name: ArtdaqDemo
-      }
-    }
+	producers: {
+	  BuildInfo:
+	  {
+		module_type: ArtdaqDemoBuildInfo
+		instance_name: ArtdaqDemo
+	  }
+	}
 
-    p2: [ BuildInfo ]
-    my_output_modules: [ normalOutput ]
-    my_network_output_modules: [rootNetOutput]
+	p2: [ BuildInfo ]
+	my_output_modules: [ normalOutput ]
+	my_network_output_modules: [rootNetOutput]
   }
 
   outputs: {
-    normalOutput: {
-      module_type: RootDAQOut
-      fileName: "/tmp/artdaqdemo_r%06r_sr%02s_%#_dl${OneBasedRelativeRank}_%tc.root"
-      fileProperties: { maxSubRuns: 1 maxRuns: 1 maxSize: 2000000 maxEvents: 1000 }
-      fastCloning: false
-      compressionLevel: 0
-      firstLoggerRank: 0
-    }
+	normalOutput: {
+	  module_type: RootDAQOut
+	  fileName: "/tmp/artdaqdemo_r%06r_sr%02s_%#_dl${OneBasedRelativeRank}_%tc.root"
+	  fileProperties: { maxSubRuns: 1 maxRuns: 1 maxSize: 2000000 maxEvents: 1000 }
+	  fastCloning: false
+	  compressionLevel: 0
+	  firstLoggerRank: 0
+	}
 
-    rootNetOutput: {
-      module_type: RootNetOutput
-      #SelectEvents: { SelectEvents: [ pmod2,pmod3 ] }
-      broadcast_sends: true
-      nonblocking_sends: true
-  	destinations: { }
-    }
+	rootNetOutput: {
+	  module_type: RootNetOutput
+	  #SelectEvents: { SelectEvents: [ pmod2,pmod3 ] }
+	  broadcast_sends: true
+	  nonblocking_sends: true
+	destinations: { }
+	}
   }
 
   process_name: DAQDL

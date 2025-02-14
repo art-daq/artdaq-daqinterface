@@ -1,104 +1,103 @@
 daq: {
    fragment_receiver: {
-      data_buffer_depth_fragments: 1000
-      data_buffer_depth_mb: 1000
-      destinations: {}
-      end_of_run_quiet_timeout_ms: 1000
-      fragment_ids: [
-         3,
-         4,
-         5
-      ]
-      generated_fragments_per_event: 3
-      generator: "CompositeDriver"
-      generator_config_list: [
-         {
-            distribution_type: 0
-            fragment_id: 3
-            fragment_type: "TOY2"
-            generator: "ToySimulator"
-            hardware_poll_interval_us: 0
-            nADCcounts: 100
-            random_seed: 738
-            separate_data_thread: true
-            separate_monitoring_thread: false
-            sleep_on_stop_us: 500000
-            starting_fragment_id: 2
-            throttle_usecs: 20000
-            timestamp_scale_factor: 1
-         },
-         {
-            distribution_type: 1
-            fragment_id: 4
-            fragment_type: "TOY2"
-            generator: "ToySimulator"
-            hardware_poll_interval_us: 0
-            nADCcounts: 100
-            random_seed: 739
-            separate_data_thread: true
-            separate_monitoring_thread: false
-            sleep_on_stop_us: 500000
-            starting_fragment_id: 3
-            throttle_usecs: 20000
-            timestamp_scale_factor: 1
-         },
-         {
-            distribution_type: 2
-            fragment_id: 5
-            fragment_type: "TOY2"
-            generator: "ToySimulator"
-            hardware_poll_interval_us: 0
-            nADCcounts: 100
-            random_seed: 736
-            separate_data_thread: true
-            separate_monitoring_thread: false
-            sleep_on_stop_us: 500000
-            starting_fragment_id: 4
-            throttle_usecs: 20000
-            timestamp_scale_factor: 1
-         }
-      ]
-      hardware_poll_interval_us: 0
-      request_address: "227.128.12.26"
-      request_mode: "Window"
-      request_port: 3001
-      request_window_offset: 2
-      request_window_width: 5
-      request_windows_are_unique: true
+	  data_buffer_depth_fragments: 1000
+	  data_buffer_depth_mb: 1000
+	  destinations: {}
+	  end_of_run_quiet_timeout_ms: 1000
+	  fragment_ids: [
+		 3,
+		 4,
+		 5
+	  ]
+	  generated_fragments_per_event: 3
+	  generator: "CompositeDriver"
+	  generator_config_list: [
+		 {
+			distribution_type: 0
+			fragment_id: 3
+			fragment_type: "TOY2"
+			generator: "ToySimulator"
+			hardware_poll_interval_us: 0
+			nADCcounts: 100
+			random_seed: 738
+			separate_data_thread: true
+			separate_monitoring_thread: false
+			sleep_on_stop_us: 500000
+			starting_fragment_id: 2
+			throttle_usecs: 20000
+			timestamp_scale_factor: 1
+		 },
+		 {
+			distribution_type: 1
+			fragment_id: 4
+			fragment_type: "TOY2"
+			generator: "ToySimulator"
+			hardware_poll_interval_us: 0
+			nADCcounts: 100
+			random_seed: 739
+			separate_data_thread: true
+			separate_monitoring_thread: false
+			sleep_on_stop_us: 500000
+			starting_fragment_id: 3
+			throttle_usecs: 20000
+			timestamp_scale_factor: 1
+		 },
+		 {
+			distribution_type: 2
+			fragment_id: 5
+			fragment_type: "TOY2"
+			generator: "ToySimulator"
+			hardware_poll_interval_us: 0
+			nADCcounts: 100
+			random_seed: 736
+			separate_data_thread: true
+			separate_monitoring_thread: false
+			sleep_on_stop_us: 500000
+			starting_fragment_id: 4
+			throttle_usecs: 20000
+			timestamp_scale_factor: 1
+		 }
+	  ]
+	  hardware_poll_interval_us: 0
+	  request_address: "227.128.12.26"
+	  request_mode: "Window"
+	  request_port: 3001
+	  request_window_offset: 2
+	  request_window_width: 5
+	  request_windows_are_unique: true
 	routing_table_config: {
-           ## True if using the Routing Master
-           use_routing_master: true
+		   ## True if using the Routing Master
+		   use_routing_master: true
 
-           ## Port that table updates should arrive on
-           table_update_port: 35556  # default
+		   ## Port that table updates should arrive on
+		   table_update_port: 35556  # default
 
-           ## Address that table updates should arrive on
-           table_update_address: "227.128.12.28"  # default
+		   ## Address that table updates should arrive on
+		   table_update_address: "227.128.12.28"  # default
 
-           ## Port that acknowledgements should be sent to
-          table_acknowledge_port: 35557  # default
+		   ## Port that acknowledgements should be sent to
+		  table_acknowledge_port: 35557  # default
 
-           ## Host that acknowledgements should be sent to
-           routing_master_hostname: "localhost"  # default
+		   ## Host that acknowledgements should be sent to
+		   routing_master_hostname: "localhost"  # default
 
-           ## Time to wait (in ms) for a routing table update if the table is exhausted
-           routing_timeout_ms: 1000  # default
+		   ## Time to wait (in ms) for a routing table update if the table is exhausted
+		   routing_timeout_ms: 1000  # default
 
-           ## Number of times to retry getting destination from routing table
-           routing_retry_count: 5  # default
-       	}
-      separate_data_thread: true
-      separate_monitoring_thread: false
-      sleep_on_stop_us: 0
-      stale_request_timeout: "0xFFFFFFFF"
+		   ## Number of times to retry getting destination from routing table
+		   routing_retry_count: 5  # default
+		}
+	  separate_data_thread: true
+	  separate_monitoring_thread: false
+	  sleep_on_stop_us: 0
+	  stale_request_timeout: "0xFFFFFFFF"
    }
    metrics: {
-      brFile: {
-         fileName: "/tmp/boardreader/br_%UID%_metrics.log"
-         level: 3
-         metricPluginType: "file"
-         uniquify: true
-      }
+	  brFile: {
+		 fileName: "/tmp/boardreader/br_%UID%_metrics.log"
+		 level: 3
+		 metricPluginType: "file"
+		 uniquify: true
+	  }
    }
 }
-
