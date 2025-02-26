@@ -19,6 +19,7 @@ daq: {
     event_queue_wait_time: 5
     onmon_event_prescale: 1
     is_data_logger: true
+    init_fragment_count: 1
 
 	routing_token_config: {
 		use_routing_manager: false

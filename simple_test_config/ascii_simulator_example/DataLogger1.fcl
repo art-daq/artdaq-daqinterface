@@ -18,6 +18,7 @@ daq: {
     subrun_size_MB: -1
     subrun_duration: -1
     subrun_event_count: 0
+    init_fragment_count: 1
     is_data_logger: true
 
 	routing_token_config: {
