@@ -7,6 +7,7 @@ daq: {
     onmon_event_prescale: 1
     is_dispatcher: true
     overwrite_mode: true
+    init_fragment_count: 1
 
     auto_suppression_enabled: false
 

@@ -17,6 +17,8 @@ datalogger_daq_standard: {
       expected_fragments_per_event: 1  # Don't change this
       is_data_logger: true  # Don't change this
 
+      # Needed parameter for when there is more than one EventBuilder. Book-kept by DAQInterface
+      init_fragment_count: 1
       # Only send 1/onmon_event_prescale events to art for online monitoring
       onmon_event_prescale: 1
       restart_crashed_art_processes: false

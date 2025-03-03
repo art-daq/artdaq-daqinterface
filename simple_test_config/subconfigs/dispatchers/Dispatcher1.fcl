@@ -13,6 +13,9 @@ daq: {
       expected_fragments_per_event: 1   # Don't change this
       is_dispatcher: true   # Don't change this
 
+      # Needed parameter for when there is more than one EventBuilder. Book-kept by DAQInterface
+      init_fragment_count: 1
+
       # Only send 1/onmon_event_prescale events to art for online monitoring
       onmon_event_prescale: 1
       routing_token_config: {

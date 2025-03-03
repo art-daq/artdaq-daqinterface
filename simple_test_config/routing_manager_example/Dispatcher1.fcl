@@ -8,6 +8,7 @@ daq: {
     onmon_event_prescale: 1
     is_dispatcher: true
     overwrite_mode: true
+    init_fragment_count: 1
 
 	routing_token_config: {
 		use_routing_manager: false

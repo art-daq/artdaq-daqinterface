@@ -14,6 +14,7 @@ daq: {
     is_data_logger: true
     expected_art_event_processing_time_us: 2000000
     restart_crashed_art_processes: false
+    init_fragment_count: 1
 
 	routing_token_config: {
 		use_routing_manager: false

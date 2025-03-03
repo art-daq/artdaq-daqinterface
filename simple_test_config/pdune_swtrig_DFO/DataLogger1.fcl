@@ -7,6 +7,7 @@ daq: {
 	onmon_event_prescale: 1
 	is_data_logger: true
 	expected_art_event_processing_time_us: 60000000
+    init_fragment_count: 1
 
 	auto_suppression_enabled: false
 

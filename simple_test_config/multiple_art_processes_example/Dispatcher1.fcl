@@ -16,6 +16,7 @@ daq: {
     is_dispatcher: true
     overwrite_mode: true
 	art_analyzer_count: 5
+    init_fragment_count: 1
 
 	routing_token_config: {
 		use_routing_manager: false

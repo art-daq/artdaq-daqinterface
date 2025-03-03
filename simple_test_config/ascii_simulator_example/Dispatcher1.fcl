@@ -19,6 +19,7 @@ daq: {
     subrun_duration: -1
     subrun_event_count: 0
     is_dispatcher: true
+    init_fragment_count: 1
 
 	routing_token_config: {
 		use_routing_manager: false
