@@ -62,7 +62,7 @@ try:
     from python_artdaq import swig_artdaq
 
     # Here, "True" means that if python_artdaq is available, it's assumed
-    # that artdaq_mfextensions is as well
+    # that artdaq-mfextensions is as well
 
     messagefacility_fhicl_filename = obtain_messagefacility_fhicl(True)
     if (
@@ -1306,7 +1306,7 @@ class DAQInterface(Component):
         cmds += get_setup_commands(self.productsdir, self.spackdir)
         cmds.append(". %s for_running" % (self.daq_setup_script))
         cmds.append(
-            'if test -n "$SETUP_ARTDAQ_MFEXTENSIONS" -o -d "$ARTDAQ_MFEXTENSIONS_DIR"; then true; else false; fi'
+            'type -P "msgviewer" && true || false'
         )
 
         checked_cmd = construct_checked_command(cmds)
@@ -1368,7 +1368,7 @@ class DAQInterface(Component):
         cmds.append(". %s for_running" % (self.daq_setup_script))
         cmds.append("which msgviewer")
         cmds.append(
-            "cp $ARTDAQ_MFEXTENSIONS_DIR/fcl/msgviewer.fcl %s" % (msgviewer_fhicl)
+            "cp `find ${FHICL_FILE_PATH//:/\/ } -name 'msgviewer.fcl' 2>/dev/null|head -1` %s" % (msgviewer_fhicl)
         )
         cmds.append(
             'res=$( grep -l "port: %d" %s )' % (port_to_replace, msgviewer_fhicl)
