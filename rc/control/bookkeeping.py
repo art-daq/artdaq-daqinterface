@@ -1188,6 +1188,7 @@ def bookkeeping_for_fhicl_documents_artdaq_v3_base(self):
     for subsystem_id, subsystem in self.subsystems.items():
 
         init_fragment_counts = {}
+        broadcast_fragment_counts = {}
 
         for procinfo in [pi for pi in self.procinfos if pi.subsystem == subsystem_id]:
 
@@ -1195,6 +1196,7 @@ def bookkeeping_for_fhicl_documents_artdaq_v3_base(self):
 
                 possible_event_senders = []
                 init_fragment_count = 0
+                broadcast_fragment_count = 0
 
                 if procinfo.name == "EventBuilder":
                     for ss_source in subsystem.sources:
@@ -1206,7 +1208,8 @@ def bookkeeping_for_fhicl_documents_artdaq_v3_base(self):
                             if sends_to_via_RootNetOutput(
                                 possible_sender_procinfo, procinfo
                             ):
-                                init_fragment_count += art_analyzer_count(possible_sender_procinfo)
+                                init_fragment_count += 1
+                                broadcast_fragment_count += art_analyzer_count(possible_sender_procinfo)
                 elif procinfo.name == "DataLogger":
                     for possible_sender_procinfo in [
                         pi
@@ -1217,7 +1220,8 @@ def bookkeeping_for_fhicl_documents_artdaq_v3_base(self):
                         if sends_to_via_RootNetOutput(
                             possible_sender_procinfo, procinfo
                         ):
-                            init_fragment_count += art_analyzer_count(possible_sender_procinfo)
+                            init_fragment_count += 1
+                            broadcast_fragment_count += art_analyzer_count(possible_sender_procinfo)
                 elif procinfo.name == "Dispatcher":
                     for possible_sender_procinfo in [
                         pi
@@ -1228,7 +1232,8 @@ def bookkeeping_for_fhicl_documents_artdaq_v3_base(self):
                         if sends_to_via_RootNetOutput(
                             possible_sender_procinfo, procinfo
                         ):
-                            init_fragment_count += art_analyzer_count(possible_sender_procinfo)
+                            init_fragment_count += 1
+                            broadcast_fragment_count += art_analyzer_count(possible_sender_procinfo)
                     if (
                         init_fragment_count == 0
                     ):  # Dispatcher will _always_ receive init Fragments, this probably means we're running without DataLoggers
@@ -1241,13 +1246,21 @@ def bookkeeping_for_fhicl_documents_artdaq_v3_base(self):
                             if sends_to_via_RootNetOutput(
                                 possible_sender_procinfo, procinfo
                             ):
-                                init_fragment_count += art_analyzer_count(possible_sender_procinfo)
+                                init_fragment_count += 1
+                                broadcast_fragment_count += art_analyzer_count(possible_sender_procinfo)
 
                 init_fragment_counts[procinfo.name] = init_fragment_count
+                broadcast_fragment_counts[procinfo.name] = broadcast_fragment_count
 
             procinfo.fhicl_used = re.sub(
                 "init_fragment_count\s*:\s*\S+",
                 "init_fragment_count: %d" % init_fragment_counts[procinfo.name],
+                procinfo.fhicl_used,
+            )
+
+            procinfo.fhicl_used = re.sub(
+                "broadcast_fragment_count\s*:\s*\S+",
+                "broadcast_fragment_count: %d" % broadcast_fragment_counts[procinfo.name],
                 procinfo.fhicl_used,
             )
 
