@@ -182,14 +182,10 @@ def save_run_record_base(self):
         "\n# <package version> <BuildInfo build time (if available)> <BuildInfo version (if available)>\n\n"
     )
 
-    assert "ARTDAQ_DAQINTERFACE_DIR" in os.environ and os.path.exists(
-        os.environ["ARTDAQ_DAQINTERFACE_DIR"]
-    )
-
     buildinfo_packages = [
         pkg for pkg in self.package_hashes_to_save
     ]  # Directly assigning would make buildinfo_packages a reference, not a copy
-    buildinfo_packages.append("artdaq_daqinterface")
+    buildinfo_packages.append("artdaq-daqinterface")
 
     package_buildinfo_dict = get_build_info(buildinfo_packages, self.daq_setup_script)
 
@@ -207,19 +203,19 @@ def save_run_record_base(self):
                 "%s"
                 % (
                     get_commit_info(
-                        "DAQInterface", os.environ["ARTDAQ_DAQINTERFACE_DIR"]
+                        "DAQInterface", "%s/srcs/artdaq-daqinterface" % (self.daq_dir)
                     )
                 )
             )
     except Exception:
         # Not an exception in a bad sense as the throw just means we're using DAQInterface as a ups product
-        self.fill_package_versions(["artdaq_daqinterface"])
+        self.fill_package_versions(["artdaq-daqinterface"])
         outf.write(
             "DAQInterface commit/version: %s"
-            % (self.package_versions["artdaq_daqinterface"])
+            % (self.package_versions["artdaq-daqinterface"])
         )
 
-    outf.write(" %s\n\n" % (package_buildinfo_dict["artdaq_daqinterface"]))
+    outf.write(" %s\n\n" % (package_buildinfo_dict["artdaq-daqinterface"]))
 
     package_commit_dict = {}
     packages_whose_versions_we_need = []
