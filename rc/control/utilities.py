@@ -729,7 +729,7 @@ def get_build_info(pkgnames, setup_script):
             continue
         else:
             mpd_basedir = os.path.dirname(setup_script)
-            
+
             if os.path.exists(mpd_basedir + "/build"):
                 desired_file = "%s/%s/%s/%s/BuildInfo/GetPackageBuildInfo.cc" % (
                     mpd_basedir,
