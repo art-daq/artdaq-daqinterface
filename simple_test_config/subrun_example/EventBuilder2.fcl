@@ -6,6 +6,7 @@ daq: {
   event_builder: {
     expected_fragments_per_event: 0  # Will be set by DAQInterface
     use_art: true
+    art_analyzer_count: 5
     buffer_count: 20
     max_incomplete_events: 75 # Same as boardreader sync interval
     verbose: true
@@ -43,24 +44,29 @@ physics: {
       frag_type: "TOY2"
     }
   }
-
-  producers: { }
-
-  filters: {
-    prescaleMod2: {
-       module_type: NthEvent
-       nth: 2
+  
+    producers: { 
+        demoProd: {
+            module_type: DemoDataProducer
+        }
     }
-    prescaleMod3: {
-       module_type: NthEvent
-       nth: 3
+
+    filters: {
+      prescaleMod2: {
+         module_type: NthEvent
+         nth: 2
+      }
+      prescaleMod3: {
+         module_type: NthEvent
+         nth: 3
+      }
     }
-  }
 
-  pmod2: [ prescaleMod2 ]
-  pmod3: [ prescaleMod3 ]
+    pmod2: [ prescaleMod2 ]
+    pmod3: [ prescaleMod3 ]
 
-  a1: [ toy1Integ, toy2Integ ]
+    a1: [ toy1Integ, toy2Integ ]
+    p1: [ demoProd ]
   my_output_modules: [ rootNetOutput ]
 }
 

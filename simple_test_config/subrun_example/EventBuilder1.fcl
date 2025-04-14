@@ -6,6 +6,7 @@ daq: {
   event_builder: {
     expected_fragments_per_event: 0  # Will be set by DAQInterface
     use_art: true
+    art_analyzer_count: 5
     buffer_count: 20
     max_incomplete_events: 75 # Same as boardreader sync interval
     verbose: true
@@ -45,7 +46,11 @@ art: {
       }
     }
 
-    producers: { }
+    producers: { 
+        demoProd: {
+            module_type: DemoDataProducer
+        }
+    }
 
     filters: {
       prescaleMod2: {
@@ -60,8 +65,9 @@ art: {
 
     pmod2: [ prescaleMod2 ]
     pmod3: [ prescaleMod3 ]
-
+    
     a1: [ toy1Integ, toy2Integ ]
+    p1: [ demoProd ]
     my_output_modules: [ rootNetOutput ]
   }
 
