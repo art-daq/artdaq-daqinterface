@@ -44,8 +44,8 @@ physics: {
       frag_type: "TOY2"
     }
   }
-  
-    producers: { 
+
+    producers: {
         demoProd: {
             module_type: DemoDataProducer
         }

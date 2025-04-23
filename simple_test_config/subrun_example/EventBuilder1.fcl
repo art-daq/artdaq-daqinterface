@@ -46,7 +46,7 @@ art: {
       }
     }
 
-    producers: { 
+    producers: {
         demoProd: {
             module_type: DemoDataProducer
         }
@@ -65,7 +65,7 @@ art: {
 
     pmod2: [ prescaleMod2 ]
     pmod3: [ prescaleMod3 ]
-    
+
     a1: [ toy1Integ, toy2Integ ]
     p1: [ demoProd ]
     my_output_modules: [ rootNetOutput ]
