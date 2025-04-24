@@ -208,7 +208,7 @@ def launch_procs_base(self):
     cmds = []
     cmds.append(
         "if [[ -z $( command -v fhicl-dump ) ]]; then %s; source %s; fi"
-        % (";".join(get_setup_commands(self.productsdir, self.spackdir)), os.environ["DAQINTERFACE_SETUP_FHICLCPP"])
+        % (";".join(get_setup_commands(self.spackdir)), os.environ["DAQINTERFACE_SETUP_FHICLCPP"])
     )
     cmds.append(
         "if [[ $FHICLCPP_VERSION =~ v4_1[01]|v4_0|v[0123] ]]; then dump_arg=0;else dump_arg=none;fi"
@@ -310,7 +310,7 @@ def launch_procs_base(self):
             launch_commands_to_run_on_host[procinfo.host].append(
                 "echo > %s" % (self.launch_attempt_files[procinfo.host])
             )
-            launch_commands_to_run_on_host[procinfo.host] += get_setup_commands(self.productsdir, self.spackdir,self.launch_attempt_files[procinfo.host])
+            launch_commands_to_run_on_host[procinfo.host] += get_setup_commands(self.spackdir,self.launch_attempt_files[procinfo.host])
             launch_commands_to_run_on_host[procinfo.host].append(
                 "source %s for_running >> %s 2>&1 "
                 % (self.daq_setup_script, self.launch_attempt_files[procinfo.host])

@@ -16,8 +16,6 @@ from time import time
 
 from threading import Thread
 
-bash_unsetup_command = 'upsname=$( which ups 2>/dev/null ); if [[ -n $upsname ]]; then unsetup() { . `$upsname unsetup "$@"` ; }; for pp in `printenv | sed -ne "/^SETUP_/{s/SETUP_//;s/=.*//;p}"`; do test $pp = UPS && continue; prod=`echo $pp | tr "A-Z" "a-z"`; unsetup -j $prod; done; echo "After bash unsetup, products active (should be nothing but ups listed):"; ups active; else echo "ups does not appear to be set up; will not unsetup any products"; fi'
-
 # Raise exceptions from threads https://stackoverflow.com/questions/2829329/catch-a-threads-exception-in-the-caller-thread
 class RaisingThread(Thread):
     def run(self):
@@ -423,7 +421,7 @@ def construct_checked_command(cmds):
 
         checked_cmds.append(cmd)
 
-        if not re.search(r"\s*&\s*$", cmd) and not bash_unsetup_command in cmd:
+        if not re.search(r"\s*&\s*$", cmd):
             check_cmd = (
                 'if [[ "$?" != "0" ]]; then echo %s: Nonzero return value from the following command: "%s" >> /tmp/daqinterface_checked_command_failures_%s.log; exit 1; fi '
                 % (date_and_time(), cmd, os.environ["USER"])
@@ -483,13 +481,11 @@ def reformat_fhicl_documents(setup_fhiclcpp, procinfos):
         "if [[ -z $( command -v fhicl-dump ) ]]; then source %s; fi"
         % (setup_fhiclcpp)
     )
-    cmds.append(
-        "if [[ $FHICLCPP_VERSION =~ v4_1[01]|v4_0|v[0123] ]]; then dump_arg=0;else dump_arg=none;fi"
-    )
+
     cmds.append("cd %s" % (reformat_indir))
 
     xargs_cmd = (
-        "find ./ -name \*.fcl -print | xargs -I {} -n 1 -P %s fhicl-dump -l $dump_arg -c {} -o %s/{}"
+        "find ./ -name \*.fcl -print | xargs -I {} -n 1 -P %s fhicl-dump -l none -c {} -o %s/{}"
         % (nprocessors, reformat_outdir)
     )
 
@@ -668,7 +664,7 @@ def get_commit_info_filename(pkgname):
 
 def get_build_info(pkgnames, setup_script):
     def parse_buildinfo_file(buildinfo_filename):
-
+        #print(f"Searching for verison/timestamp info in {buildinfo_filename}")
         buildinfo_version = '"version from BuildInfo undetermined"'
         buildinfo_time = '"time from BuildInfo undetermined"'
 
@@ -700,12 +696,10 @@ def get_build_info(pkgnames, setup_script):
 
     pkg_build_infos = {}
     cmds = []
-    cmds.append(bash_unsetup_command)
     cmds.append(". %s" % (setup_script))
 
     for pkgname in pkgnames:
-        ups_pkgname = pkgname.replace("-", "_")
-        cmds.append('ups active | grep -E "^%s\s+"' % (ups_pkgname))
+        cmds.append(f'spack cd -i {pkgname};pwd')
 
     proc = Popen(
         ";".join(cmds), shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, encoding="UTF-8"
@@ -716,71 +710,31 @@ def get_build_info(pkgnames, setup_script):
 
         buildinfo_time = '"time from BuildInfo undetermined"'
         buildinfo_version = '"version from BuildInfo undetermined"'
-        pkg_build_infos[pkgname] = "%s %s" % (buildinfo_time, buildinfo_version)
+        pkg_build_infos[pkgname] = f"{buildinfo_time} {buildinfo_version}"
 
-        ups_pkgname = pkgname.replace("-", "_")
-
-        found_ups_package = False
+        found_spack_package = False
         package_line_number = -1
         for i_l, line in enumerate(stdoutlines):
-            if re.search(r"^%s\s+" % (ups_pkgname), line):
-                found_ups_package = True
+            if re.search(rf"/{pkgname}-v?[0-9]", line):
+                found_spack_package = True
                 package_line_number = i_l
                 break
 
-        if found_ups_package:
-            version = stdoutlines[package_line_number].split()[1]
-            upsdir = stdoutlines[package_line_number].split()[-1]
+        if found_spack_package:
+            package_dir = stdoutlines[package_line_number]
 
-            ups_sourcedir = "%s/%s/%s/source" % (upsdir, ups_pkgname, version)
-
-            if not os.path.exists(ups_sourcedir):
-                # print "Unable to find expected ups source file directory %s, will not be able to save build info for %s in the run record" % (ups_sourcedir, pkgname)
-                continue
-
-            buildinfo_file1 = "%s/%s/BuildInfo/GetPackageBuildInfo.cc" % (
-                ups_sourcedir,
-                pkgname,
-            )
-            buildinfo_file2 = "%s/%s/BuildInfo/GetPackageBuildInfo.cc" % (
-                ups_sourcedir,
-                pkgname.replace("_", "-"),
-            )
-            if os.path.exists(buildinfo_file1):
-                buildinfo_file = buildinfo_file1
-            elif os.path.exists(buildinfo_file2):
-                buildinfo_file = buildinfo_file2
-            else:
-                if buildinfo_file1 != buildinfo_file2:
-                    print(
-                        "Unable to find hoped-for %s BuildInfo file (%s or %s), will not be able to save build info for %s in the run record"
-                        % (pkgname, buildinfo_file1, buildinfo_file2, pkgname)
-                    )
-                else:
-                    print(
-                        "Unable to find hoped-for %s BuildInfo file (%s), will not be able to save build info for %s in the run record"
-                        % (pkgname, buildinfo_file1, pkgname)
-                    )
-
-                continue
+            buildinfo_file = f"{package_dir}/source/{pkgname}/BuildInfo/GetPackageBuildInfo.cc"
 
             pkg_build_infos[pkgname] = parse_buildinfo_file(buildinfo_file)
             continue
         else:
-            mrb_basedir = os.path.dirname(setup_script)
-            # print "No ups product for %s is set up by %s, will check for build info in local build subdirectory of %s" % (pkgname, setup_script, mrb_basedir)
-            builddir_as_list = [
-                builddir
-                for builddir in os.listdir(os.path.dirname(setup_script))
-                if re.search(r"build_.*\..*", builddir)
-            ]
+            mpd_basedir = os.path.dirname(setup_script)
 
-            if len(builddir_as_list) == 1:
-                builddir = builddir_as_list[0]
+            if os.path.exists(mpd_basedir + "/build"):
                 desired_file = "%s/%s/%s/%s/BuildInfo/GetPackageBuildInfo.cc" % (
-                    mrb_basedir,
-                    builddir,
-                    pkgname.replace("-", "_"),
+                    mpd_basedir,
+                    "build",
+                    pkgname,
                     pkgname,
                 )
                 if os.path.exists(desired_file):
@@ -789,14 +743,8 @@ def get_build_info(pkgnames, setup_script):
                     # print "Unable to find a file with the name %s, will not be able to save build info for %s in the run record" % (desired_file, pkgname)
                     pass
 
-            elif len(builddir_as_list) > 1:
-                print(
-                    "Warning: unable to find build info for %s as %s doesn't set up a ups product for it and there's more than one local build subdirectory in %s: %s"
-                    % (pkgname, setup_script, mrb_basedir, " ".join(builddir_as_list))
-                )
-                pass
             else:
-                # print "No local build subdirectory was found in %s, no build info for %s will be saved in the run record" % (mrb_basedir, pkgname)
+                print( "No local build subdirectory was found in %s, no build info for %s will be saved in the run record" % (mpd_basedir, pkgname))
                 pass
 
     return pkg_build_infos
@@ -953,22 +901,6 @@ def zero_out_last_subnet(network):
     assert res, 'Developer error: proper address not passed to "zero_out_last_subnet"'
     return "%s0" % (res.group(1))
 
-
-def upsproddir_from_productsdir(productsdir):
-    for pp in productsdir.split(":"):
-        upsproddir = ""  # may not find what we're looking for
-        tt = pp.rstrip("/") + "/"  # make sure it ends with _single_ '/'
-        if (
-            os.path.isdir(tt)
-            and os.path.isfile(tt + "setup")
-            and os.path.isdir(tt + ".upsfiles")
-            and os.path.isdir(tt + "ups")
-        ):
-            upsproddir = pp.rstrip("/")  # make sure it does not end with '/'
-            break
-    return upsproddir
-
-
 def record_directory_info(recorddir):
     if not os.path.exists(recorddir):
         raise Exception('Directory "%s" doesn\'t exist, exiting...')
@@ -1032,18 +964,6 @@ def main():
 
         sys.exit(0)
 
-    elif len(sys.argv) > 1 and sys.argv[1] == "upsproddir_from_productsdir":
-        if len(sys.argv) != 3:
-            print(
-                make_paragraph(
-                    "Error: expected 1 argument to upsproddir_from_productsdir: PRODUCTS_list"
-                )
-            )
-            sys.exit(1)
-
-        productsdir = sys.argv[2]
-        print(upsproddir_from_productsdir(productsdir))
-        sys.exit(0)
     elif len(sys.argv) > 1 and sys.argv[1] == "record_directory_info":
         if len(sys.argv) != 3:
             print(
@@ -1128,9 +1048,6 @@ def main():
         print("Output FHiCL string: ")
         print(outputstring)
         print
-
-    if bash_unsetup_test:
-        Popen(bash_unsetup_command, shell=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
 
     if get_commit_info_test:
         pkgname = "artdaq"
@@ -1221,30 +1138,9 @@ def main():
             print('Name of table enclosing "%s" found to be "%s"' % (token, tablename))
 
 
-def get_setup_commands(productsdir=None, spackdir=None, log_file=None):
+def get_setup_commands(spackdir=None, log_file=None):
     output = []
-    if productsdir != None:
-        if log_file == None:
-            output.append(
-                'export PRODUCTS="%s"; . %s/setup'
-                % (
-                    productsdir,
-                    upsproddir_from_productsdir(productsdir),
-                )
-            )
-        else:
-            output.append(
-                'export PRODUCTS="%s"; . %s/setup >> %s 2>&1 '
-                % (
-                    productsdir,
-                    upsproddir_from_productsdir(productsdir),
-                    log_file,
-                )
-            )
-        output.append(
-                bash_unsetup_command + " > /dev/null 2>&1 "
-        )
-    elif spackdir != None:
+    if spackdir != None:
         output.append("export SPACK_DISABLE_LOCAL_CONFIG=true")
         if log_file == None:
             output.append('. %s/share/spack/setup-env.sh' % (spackdir))
