@@ -62,36 +62,17 @@ max_fragment_size_bytes: 1024
 throttle_usecs: 0
 usecs_between_sends: 10000
 	  distribution_type: 2
-	  timestamp_scale_factor: 2
-	  sequence_scale_factor: 2
-	  skip_seqID_test: true
+	  timestamp_scale_factor: 1
+	  sequence_scale_factor: 1
+	  skip_seqID_test: false
+      rollover_subrun_interval: 100
+
 
 		destinations: { }
 
 	routing_table_config: {
 		   ## True if using the Routing Manager
-		   use_routing_manager: true
-
-	   route_on_request_mode: true
-
-		   ## Port that table updates should arrive on
-		   table_update_port: 35556  # default
-
-		   ## Address that table updates should arrive on
-		   table_update_address: "227.128.12.28"  # default
-
-		   ## Port that acknowledgements should be sent to
-		  table_acknowledge_port: 35557  # default
-
-		   ## Host that acknowledgements should be sent to
-		   routing_manager_hostname: "localhost"  # default
-			table_update_multicast_interface: "0.0.0.0"
-
-		   ## Time to wait (in ms) for a routing table update if the table is exhausted
-		   routing_timeout_ms: 1000  # default
-
-		   ## Number of times to retry getting destination from routing table
-		   routing_retry_count: 5  # default
+		   use_routing_manager: false
 		}
   }
 

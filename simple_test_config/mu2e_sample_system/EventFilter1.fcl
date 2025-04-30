@@ -10,16 +10,11 @@ daq: {
 	verbose: true
 	init_fragment_count: 0
 	send_requests: false
+    art_analyzer_count: 5
 
     routing_token_config: {
         ## True if using the Routing Manager
-        use_routing_manager: true
-
-        ## Port to send tokens on
-        routing_token_port: 35555  # default
-
-        ## Hostname or IP of RoutingManager
-        routing_manager_hostname: "localhost"  # default
+        use_routing_manager: false
    }
 
 	sources: { }
@@ -43,7 +38,7 @@ services: {
 outputs: {
   subsystemOutput: {
     module_type: RootNetOutput
-    #SelectEvents: [ delay ]
+    SelectEvents: [ delay ]
     #broadcast_sends: true
 	destinations: {	}
 
@@ -86,6 +81,9 @@ physics: {
   }
 
   producers: {
+        demoProd: {
+            module_type: DemoDataProducer
+        }
   }
 
   filters: {
@@ -102,8 +100,9 @@ physics: {
 	}
   }
 
-  #delay: [ randomDelay ]
+  delay: [ randomDelay ]
   a1: [ toy1Integ, toy2Integ ]
+  p1: [ demoProd ]
   my_output_modules: [ lumiOutput, subsystemOutput ]
   #my_output_modules: [ normalOutput ]
 }

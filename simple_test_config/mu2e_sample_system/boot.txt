@@ -38,6 +38,6 @@ Dispatcher host: localhost
 Dispatcher label: Dispatcher1
 Dispatcher subsystem: 2
 
-RoutingManager host: localhost
-RoutingManager label: RoutingManager1
-RoutingManager subsystem: 1
+# RoutingManager host: localhost
+# RoutingManager label: RoutingManager1
+# RoutingManager subsystem: 1
