@@ -44,7 +44,7 @@ source: {
 outputs: {
   normalOutput: {
     module_type: RootDAQOut
-    fileName: "/tmp/trkcal_r%06r_sr%02s_%to_%#.root"
+    fileName: "/tmp/trkcal_r%06r_sr%02s_%#.root"
     fileProperties: { maxSubRuns: 1 maxRuns: 1  }
     fastCloning: false
     compressionLevel: 501 # ZSTD

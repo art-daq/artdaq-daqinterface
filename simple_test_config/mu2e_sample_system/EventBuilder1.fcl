@@ -10,6 +10,7 @@ daq: {
 	verbose: true
 	init_fragment_count: 2
 	send_requests: false
+    art_analyzer_count: 2
 
 	routing_token_config: {
 	use_routing_manager: false
