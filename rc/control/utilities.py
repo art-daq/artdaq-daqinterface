@@ -721,7 +721,7 @@ def get_build_info(pkgnames, setup_script):
                 break
 
         if found_spack_package:
-            package_dir = stdoutlines[package_line_number]
+            package_dir = stdoutlines[package_line_number].strip()
 
             buildinfo_file = f"{package_dir}/source/{pkgname}/BuildInfo/GetPackageBuildInfo.cc"
 
