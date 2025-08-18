@@ -3380,6 +3380,19 @@ class DAQInterface(Component):
                     )
                     return
 
+            starttime = time()
+            self.print_log("i", "Waiting for artdaq XMLRPC servers to start")
+            for procinfo in self.procinfos:
+                while True:
+                    try:
+                        procinfo.lastreturned = procinfo.server.daq.status()
+                        break
+                    except Exception as ex:
+                        sleep(1)
+                        pass
+            endtime = time()
+            self.print_log("i", "done (%.1f seconds)." % (endtime - starttime))
+
         if self.msgviewer_proc is not None:
             # now wait/check status from msgviewer
             if self.msgviewer_proc.wait() != 0:
