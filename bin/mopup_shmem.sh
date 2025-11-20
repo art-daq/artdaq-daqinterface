@@ -74,8 +74,8 @@ token=$(( partition + 1))
 hextoken=$( printf "%02x" $token )
 #echo "Assuming that partition $partition appears as \"$hextoken\" in the shmem keys..."
 
-num_blocks=$( ipcs | grep -E "^0xee${hextoken}|^0xbb${hextoken}|^0x${hextoken}00" | wc -l )
-num_owned_blocks_before=$( ipcs | grep -E "^0xee${hextoken}|^0xbb${hextoken}|^0x${hextoken}00" | grep $USER | wc -l )
+num_blocks=$( ipcs -m | grep -E "^0xee${hextoken}|^0xbb${hextoken}|^0x${hextoken}00" | wc -l )
+num_owned_blocks_before=$( ipcs -m | grep -E "^0xee${hextoken}|^0xbb${hextoken}|^0x${hextoken}00" | grep $USER | wc -l )
 
 if (( $num_blocks != $num_owned_blocks_before )); then
 
@@ -90,11 +90,16 @@ EOF
 fi
 
 function get_shmids() {
-	ipcs | grep -E "^0xee${hextoken}|^0xbb${hextoken}|^0x${hextoken}00" | grep $USER | awk '{print $2}'
+	ipcs -m | grep -E "^0xee${hextoken}|^0xbb${hextoken}|^0x${hextoken}00" | grep $USER | awk '{print $2}'
 }
 
 function kill_art() {
 	pids=`ps -fu $USER|grep "art -c"|grep "partition_$partition"|awk '{print $2}'`
+
+    if [ ${#pids} - eq 0 ]; then
+        return
+    fi
+
 	echo "Killing art processes `echo $pids|tr '\n' ' '`"
 	kill $pids
 	sleep 5
@@ -111,7 +116,7 @@ kill_art
 owner_pids=""
 
 for shmid in $( get_shmids ); do
-	nattached=$( ipcs | awk '{ if ("'$shmid'" == $2) { print $6 } }' )
+	nattached=$( ipcs -m | awk '{ if ("'$shmid'" == $2) { print $6 } }' )
 
 	if ! [[ "$nattached" =~ ^[0-9]+$ ]]; then
 		echo "Surprising error - attempt to determine number of attached processes to shared memory block with id $shmid did not yield an integer" >&2
@@ -138,7 +143,7 @@ for owner_pid in $owner_pids; do
 	kill $owner_pid
 done
 
-ipcs
+ipcs -m
 
 for shmid in $( get_shmids ); do
 
