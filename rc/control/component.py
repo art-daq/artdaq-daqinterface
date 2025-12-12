@@ -3,6 +3,7 @@ import datetime
 import os.path
 import os
 import random
+import traceback
 from contextlib import contextmanager
 from rc.io.rpc import rpc_server
 from rc.threading import threadable
@@ -35,6 +36,8 @@ class Component(ContextObject):
         self.synchronous = synchronous
 
         self.__state = "stopped"
+        # print(f"Component init, my name is {self.name}, my state is {self.__state}")
+
         self.__rpc_host = rpc_host
         self.__rpc_port = rpc_port
         self.run_params = None
@@ -94,9 +97,26 @@ class Component(ContextObject):
         }
 
     def state(self, name):
+        # print(f"getting state for component name '{name}', my name is '{self.name}'", flush=True)
+        # traceback.print_stack()
+
         if name != self.name:
             return "unknown"
+
+        # print(f"my state is '{self.__state}'", flush=True)
         return self.__state
+
+    # def state(self, name):
+    #     print(f"getting state for component {name}, my name is {self.name}")
+    #     if name != self.name:
+    #         return "unknown"      
+
+    #     if hasattr(obj, f"_{obj.__class__.__name__}__state"):  
+    #         print(f"getting state for component {name}, my name is {self.name}, my state is {self.__state}")
+    #     else:
+    #         print(f"Unknown state for component {name}, my name is {self.name}")
+
+    #     return self.__state
 
     def artdaq_process_info(self, name):
         raise NotImplementedError()
@@ -105,6 +125,7 @@ class Component(ContextObject):
         if name != self.name:
             return
         newstate = self.dict_state_to.get(requested, requested)
+        # print(f"Changing state to '{newstate}', from '{self.__state}'", flush=True)
         trep = datetime.datetime.utcnow()
         self.__state = newstate
 
