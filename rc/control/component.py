@@ -106,18 +106,6 @@ class Component(ContextObject):
         # print(f"my state is '{self.__state}'", flush=True)
         return self.__state
 
-    # def state(self, name):
-    #     print(f"getting state for component {name}, my name is {self.name}")
-    #     if name != self.name:
-    #         return "unknown"
-
-    #     if hasattr(obj, f"_{obj.__class__.__name__}__state"):
-    #         print(f"getting state for component {name}, my name is {self.name}, my state is {self.__state}")
-    #     else:
-    #         print(f"Unknown state for component {name}, my name is {self.name}")
-
-    #     return self.__state
-
     def artdaq_process_info(self, name):
         raise NotImplementedError()
 
