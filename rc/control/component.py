@@ -97,13 +97,13 @@ class Component(ContextObject):
         }
 
     def state(self, name):
-        print(f"getting state for component name '{name}', my name is '{self.name}'", flush=True)
-        traceback.print_stack()
+        # print(f"getting state for component name '{name}', my name is '{self.name}'", flush=True)
+        # traceback.print_stack()
 
         if name != self.name:
             return "unknown"
 
-        print(f"my state is '{self.__state}'", flush=True)
+        # print(f"my state is '{self.__state}'", flush=True)
         return self.__state
 
     # def state(self, name):
