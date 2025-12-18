@@ -3714,11 +3714,11 @@ class DAQInterface(Component):
                     % (", ".join(self.process_manager_log_filenames))
                 ),
             )
-        
+
         self.print_log("i", "\n%s: CONFIG transition complete" % (date_and_time()))
         return "done"
-        
-        
+
+
 
     def do_start_running(self, run_number=None):
 
