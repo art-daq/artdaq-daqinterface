@@ -96,7 +96,7 @@ function get_shmids() {
 function kill_art() {
 	pids=`ps -fu $USER|grep "art -c"|grep "partition_$partition"|awk '{print $2}'`
 
-    if [ ${#pids} - eq 0 ]; then
+    if [ ${#pids} -eq 0 ]; then
         return
     fi
 
