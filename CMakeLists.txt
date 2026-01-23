@@ -23,6 +23,9 @@ project(artdaq-daqinterface VERSION 4.03.01)
 set(artdaq_daqinterface_NOARCH TRUE)
 
 include(CetCMakeEnv)
+include(SetCompilerFlags)
+include(CetCMakeConfig)
+
 cet_cmake_env()
 SET(CMAKE_INSTALL_RPATH_USE_LINK_PATH TRUE)
 
