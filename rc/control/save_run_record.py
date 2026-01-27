@@ -197,7 +197,8 @@ def save_run_record_base(self):
     Popen(
         "cp -p " + self.daq_setup_script + " " + outdir + "/setup.txt",
         shell=True,
-        stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL,
+        stdout=subprocess.DEVNULL,
+        stderr=subprocess.DEVNULL,
     ).wait()
 
     if not os.path.exists(outdir + "/setup.txt"):
@@ -208,7 +209,8 @@ def save_run_record_base(self):
     Popen(
         "cp -p " + os.environ["DAQINTERFACE_SETTINGS"] + " " + outdir + "/settings.txt",
         shell=True,
-        stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL,
+        stdout=subprocess.DEVNULL,
+        stderr=subprocess.DEVNULL,
     ).wait()
 
     if not os.path.exists(outdir + "/settings.txt"):
@@ -223,7 +225,8 @@ def save_run_record_base(self):
         + outdir
         + "/known_boardreaders_list.txt",
         shell=True,
-        stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL,
+        stdout=subprocess.DEVNULL,
+        stderr=subprocess.DEVNULL,
     ).wait()
 
     if not os.path.exists(outdir + "/known_boardreaders_list.txt"):
@@ -288,9 +291,7 @@ def save_run_record_base(self):
     for i_comp, component in enumerate(sorted(self.daq_comp_list)):
         outf.write("Component #%d: %s\n" % (i_comp, component))
 
-    outf.write(
-        "DAQInterface directory: %s:%s\n" % (socket.gethostname(), os.getcwd())
-    )
+    outf.write("DAQInterface directory: %s:%s\n" % (socket.gethostname(), os.getcwd()))
     outf.write(
         "DAQInterface logfile: %s:%s\n"
         % (
@@ -327,26 +328,19 @@ def save_run_record_base(self):
     except Exception:
         package_buildinfo_dict = None
 
-
-    try:
-        commit_info_fullpathname = "%s/%s" % (
-            os.path.dirname(self.daq_setup_script),
-            get_commit_info_filename("DAQInterface"),
-        )
-        if os.path.exists(commit_info_fullpathname):
-            with open(commit_info_fullpathname) as commitfile:
-                outf.write("%s" % (commitfile.read()))
-        else:
-            outf.write(
-                "%s"
-                % (
-                    get_commit_info(
-                        "DAQInterface", "%s/srcs/artdaq-daqinterface" % (self.daq_dir)
-                    )
-                )
-            )
-    except Exception:
-        # Not an exception in a bad sense as the throw just means we're using DAQInterface as a ups product
+    commit_info_fullpathname = "%s/%s" % (
+        os.path.dirname(self.daq_setup_script),
+        get_commit_info_filename("DAQInterface"),
+    )
+    daqint_full_path = "%s/srcs/artdaq-daqinterface" % (
+        os.path.dirname(self.daq_setup_script)
+    )
+    if os.path.exists(commit_info_fullpathname):
+        with open(commit_info_fullpathname) as commitfile:
+            outf.write("%s" % (commitfile.read()))
+    elif os.path.exists(daqint_full_path):
+        outf.write("%s" % (get_commit_info("DAQInterface", daqint_full_path)))
+    else:
         self.fill_package_versions(["artdaq-daqinterface"])
         outf.write(
             "DAQInterface commit/version: %s"
@@ -363,7 +357,7 @@ def save_run_record_base(self):
 
     for pkgname in self.package_hashes_to_save:
 
-        pkg_full_path = "%s/srcs/%s" % (self.daq_dir, pkgname)
+        pkg_full_path = "%s/srcs/%s" % (os.path.dirname(self.daq_setup_script), pkgname)
         commit_info_fullpathname = "%s/%s" % (
             os.path.dirname(self.daq_setup_script),
             get_commit_info_filename(pkgname),
@@ -386,7 +380,7 @@ def save_run_record_base(self):
             # We'll throw this on the list of packages whose actual versions we need to figure out in real-time
             packages_whose_versions_we_need.append(pkgname)
 
-    self.fill_package_versions( packages_whose_versions_we_need    )
+    self.fill_package_versions(packages_whose_versions_we_need)
 
     for pkgname in packages_whose_versions_we_need:
         package_commit_dict[pkgname] = "%s commit/version: %s" % (
@@ -426,7 +420,7 @@ def save_run_record_base(self):
     outf.write("\n")
     outf.close()
 
-    for (recorddir, dummy, recordfiles) in os.walk(self.tmp_run_record):
+    for recorddir, dummy, recordfiles in os.walk(self.tmp_run_record):
         for recordfile in recordfiles:
             os.chmod("%s/%s" % (recorddir, recordfile), 0o444)
 
