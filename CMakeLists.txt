@@ -18,11 +18,14 @@ cmake_minimum_required (VERSION 3.16)
 
 find_package(cetmodules)
 
-project(artdaq-daqinterface VERSION 4.03.01)
+project(artdaq-daqinterface VERSION 4.04.00)
 
 set(artdaq_daqinterface_NOARCH TRUE)
 
 include(CetCMakeEnv)
+include(SetCompilerFlags)
+include(CetCMakeConfig)
+
 cet_cmake_env()
 SET(CMAKE_INSTALL_RPATH_USE_LINK_PATH TRUE)
 
