@@ -3625,7 +3625,9 @@ class DAQInterface(Component):
             .strip(),
         )
 
-        assert not os.path.exists(self.semipermanent_run_record)
+        if os.path.exists(self.semipermanent_run_record):
+            raise RuntimeError(f"Directory {self.semipermanent_run_record} already exists!")
+        #assert not os.path.exists(self.semipermanent_run_record)
 
         if os.path.exists(self.tmp_run_record):
             shutil.rmtree(self.tmp_run_record)
