@@ -1,4 +1,3 @@
-
 import random
 import string
 import os
@@ -168,7 +167,7 @@ def launch_procs_on_host(
             make_paragraph(
                 'You can also try running again with the "debug level" in the boot file set to 4. Otherwise, you can recreate what DAQInterface did by performing a clean login to %s, source-ing the DAQInterface environment and executing the following:'
                 % (host)
-           ),
+            ),
         )
         self.print_log(
             "i", "\n" + "\n".join(launch_commands_on_host_to_show_user) + "\n"
@@ -183,7 +182,7 @@ def launch_procs_on_host(
             % (host)
         )
     else:
-        self.print_log("d", "...host %s done." % ( host ),executing_commands_debug_level)
+        self.print_log("d", "...host %s done." % (host), executing_commands_debug_level)
 
     return status
 
@@ -208,7 +207,10 @@ def launch_procs_base(self):
     cmds = []
     cmds.append(
         "if [[ -z $( command -v fhicl-dump ) ]]; then %s; source %s; fi"
-        % (";".join(get_setup_commands(self.spackdir)), os.environ["DAQINTERFACE_SETUP_FHICLCPP"])
+        % (
+            ";".join(get_setup_commands(self.spackdir)),
+            os.environ["DAQINTERFACE_SETUP_FHICLCPP"],
+        )
     )
     cmds.append(
         "if [[ $FHICLCPP_VERSION =~ v4_1[01]|v4_0|v[0123] ]]; then dump_arg=0;else dump_arg=none;fi"
@@ -292,14 +294,15 @@ def launch_procs_base(self):
             procinfo.host = get_short_hostname()
 
         if not procinfo.host in launch_commands_to_run_on_host:
-            self.launch_attempt_files[
-                procinfo.host
-            ] = "%s/pmt/launch_attempt_%s_%s_partition%s_%s" % (
-                self.log_directory,
-                procinfo.host,
-                os.environ["USER"],
-                os.environ["DAQINTERFACE_PARTITION_NUMBER"],
-                date_and_time_filename(),
+            self.launch_attempt_files[procinfo.host] = (
+                "%s/pmt/launch_attempt_%s_%s_partition%s_%s"
+                % (
+                    self.log_directory,
+                    procinfo.host,
+                    os.environ["USER"],
+                    os.environ["DAQINTERFACE_PARTITION_NUMBER"],
+                    date_and_time_filename(),
+                )
             )
 
             launch_commands_to_run_on_host[procinfo.host] = []
@@ -310,7 +313,9 @@ def launch_procs_base(self):
             launch_commands_to_run_on_host[procinfo.host].append(
                 "echo > %s" % (self.launch_attempt_files[procinfo.host])
             )
-            launch_commands_to_run_on_host[procinfo.host] += get_setup_commands(self.spackdir,self.launch_attempt_files[procinfo.host])
+            launch_commands_to_run_on_host[procinfo.host] += get_setup_commands(
+                self.spackdir, self.launch_attempt_files[procinfo.host]
+            )
             launch_commands_to_run_on_host[procinfo.host].append(
                 "source %s for_running >> %s 2>&1 "
                 % (self.daq_setup_script, self.launch_attempt_files[procinfo.host])
@@ -535,7 +540,10 @@ def softlink_process_manager_logfile(self, host):
     )
 
     if not host_is_local(host):
-        link_pmt_logfile_cmd = "ssh -o BatchMode=yes -f %s '%s'" % (host, link_pmt_logfile_cmd)
+        link_pmt_logfile_cmd = "ssh -o BatchMode=yes -f %s '%s'" % (
+            host,
+            link_pmt_logfile_cmd,
+        )
 
     status = Popen(
         link_pmt_logfile_cmd,
@@ -581,7 +589,10 @@ def get_process_manager_log_filename(self, host):
     )
 
     if not host_is_local(host):
-        get_log_filename_cmd = "ssh -o BatchMode=yes -f %s '%s'" % (host, get_log_filename_cmd)
+        get_log_filename_cmd = "ssh -o BatchMode=yes -f %s '%s'" % (
+            host,
+            get_log_filename_cmd,
+        )
 
     log_filename_current = (
         Popen(
@@ -808,7 +819,7 @@ def get_pids_and_labels_on_host(host, procinfos):
 
     # greptoken =
     # "[0-9]:[0-9][0-9]\s\+valgrind.*\(%s\).*application_name.*partition_number:\s*%s"
-    #% \
+    # % \
     #            ("\|".join(set([bootfile_name_to_execname(procinfo.name) for
     #            procinfo in procinfos])), \
     # os.environ["DAQINTERFACE_PARTITION_NUMBER"])

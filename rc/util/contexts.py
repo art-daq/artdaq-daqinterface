@@ -5,6 +5,7 @@ class ContextObject(object):
     """
     Create an object whose init method can define multiple contexts
     """
+
     def __init__(self):
         self.contexts = []
 

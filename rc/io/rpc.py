@@ -12,14 +12,17 @@ class StoppableRPCServer(SimpleXMLRPCServer):
     for last request to complete since otherwise this fails sometimes,
     at least on Ubuntu
     """
+
     allow_reuse_address = True
 
     def __init__(self, address, timeout=0.1):
-        SimpleXMLRPCServer.__init__(self,
-                                    address,
-                                    requestHandler=SimpleXMLRPCRequestHandler,
-                                    logRequests=False,
-                                    allow_none=True)
+        SimpleXMLRPCServer.__init__(
+            self,
+            address,
+            requestHandler=SimpleXMLRPCRequestHandler,
+            logRequests=False,
+            allow_none=True,
+        )
         self.__is_shut_down = threading.Event()
         self.__is_shut_down.clear()
         self.timeout = timeout
@@ -40,10 +43,9 @@ class StoppableRPCServer(SimpleXMLRPCServer):
 
 
 @contextlib.contextmanager
-def rpc_server(host='', port=6000, funcs={}, timeout=0.01):
+def rpc_server(host="", port=6000, funcs={}, timeout=0.01):
     server = StoppableRPCServer((host, port), timeout=timeout)
-    with threaded(target=server.serve_forever,
-                  name='rpc-server-%s-%d' % (host, port)):
+    with threaded(target=server.serve_forever, name="rpc-server-%s-%d" % (host, port)):
         for name, func in funcs.items():
             server.register_function(func, name)
         try:

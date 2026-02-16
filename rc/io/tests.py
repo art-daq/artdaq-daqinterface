@@ -9,8 +9,8 @@ from rc.util import wait_until, eq, raises, is_mac
 def test_simple_connection():
     with receiver() as r:
         with sender() as s:
-            s.send('1')
-            wait_until(lambda: r.recv_nonblock() == '1')
+            s.send("1")
+            wait_until(lambda: r.recv_nonblock() == "1")
 
 
 def test_raw_sender():
@@ -22,6 +22,7 @@ def test_raw_sender():
                 recvd = r.recv_nonblock()
                 if recvd == [1, 2, 3]:
                     return True
+
             wait_until(done)
 
 
@@ -83,10 +84,11 @@ def test_queuing_receiver_context_manager():
                 t.wakeup()
                 try:
                     data = q.get(timeout=0.01)
-                    assert data == '1'
+                    assert data == "1"
                     return True
                 except Queue.Empty:
                     return False
+
             wait_until(done, timeout=3)
 
 

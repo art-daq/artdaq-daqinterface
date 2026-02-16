@@ -2031,13 +2031,10 @@ class DAQInterface(Component):
             return
 
         if self.spackdir != None:
-            cmd = (
-                "%s ; . %s; spack find | sed -r -n 's/^(%s)@(\\S+).*/\\1 \\2/p'"
-                % (
-                    ";".join(get_setup_commands(self.spackdir)),
-                    self.daq_setup_script,
-                    "|".join(needed_packages),
-                )
+            cmd = "%s ; . %s; spack find | sed -r -n 's/^(%s)@(\\S+).*/\\1 \\2/p'" % (
+                ";".join(get_setup_commands(self.spackdir)),
+                self.daq_setup_script,
+                "|".join(needed_packages),
             )
 
         if cmd != "":
@@ -3626,8 +3623,10 @@ class DAQInterface(Component):
         )
 
         if os.path.exists(self.semipermanent_run_record):
-            raise RuntimeError(f"Directory {self.semipermanent_run_record} already exists!")
-        #assert not os.path.exists(self.semipermanent_run_record)
+            raise RuntimeError(
+                f"Directory {self.semipermanent_run_record} already exists!"
+            )
+        # assert not os.path.exists(self.semipermanent_run_record)
 
         if os.path.exists(self.tmp_run_record):
             shutil.rmtree(self.tmp_run_record)
@@ -3719,8 +3718,6 @@ class DAQInterface(Component):
 
         self.print_log("i", "\n%s: CONFIG transition complete" % (date_and_time()))
         return "done"
-
-
 
     def do_start_running(self, run_number=None):
 

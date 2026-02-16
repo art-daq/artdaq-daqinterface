@@ -15,13 +15,12 @@ def doubleval():
 
 class Example(ContextObject):
     def __init__(self):
-        self.contexts = [('s66', sixtysix())]
+        self.contexts = [("s66", sixtysix())]
 
 
 class BiggerExample(ContextObject):
     def __init__(self):
-        self.contexts = [('s66', sixtysix()),
-                         ('one', 'two', doubleval())]
+        self.contexts = [("s66", sixtysix()), ("one", "two", doubleval())]
 
 
 def test_context_object():
@@ -40,14 +39,15 @@ def test_exception_in_context_object():
     def zero_divider():
         with ContextObject():
             1 / 0
+
     raises(ZeroDivisionError, zero_divider)
 
 
 def test_nested_exception_handled_properly():
     def zero_divider():
-        with nested(ContextObject(),
-                    ContextObject()) as (a, b):
+        with nested(ContextObject(), ContextObject()) as (a, b):
             1 / 0
+
     raises(ZeroDivisionError, zero_divider)
 
 
@@ -57,7 +57,7 @@ def test_exception_handler_context():
     class ExampleWithExceptionHandler(ContextObject):
         def __init__(self):
             self.hit = False
-            self.contexts = [('exc_handler', apply_on_exception(self.do_hit))]
+            self.contexts = [("exc_handler", apply_on_exception(self.do_hit))]
 
         def do_hit(self):
             hit[0] = True
