@@ -3610,16 +3610,7 @@ class DAQInterface(Component):
 
         self.semipermanent_run_record = "/tmp/run_record_attempted_%s/%s" % (
             os.environ["USER"],
-            Popen(
-                "date +%a_%b_%d_%H:%M:%S.%N",
-                executable="/bin/bash",
-                shell=True,
-                stdout=subprocess.PIPE,
-                stderr=subprocess.STDOUT,
-                encoding="utf8",
-            )
-            .stdout.readlines()[0]
-            .strip(),
+            datetime.datetime.now().strftime("%a_%b_%d_%H:%M:%S.%f"),
         )
 
         if os.path.exists(self.semipermanent_run_record):
