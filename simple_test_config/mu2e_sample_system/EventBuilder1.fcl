@@ -9,7 +9,10 @@ daq: {
 	max_incomplete_events: 75 # Same as boardreader sync interval
 	verbose: true
 	init_fragment_count: 2
-	send_requests: false
+	send_requests: true
+    multicast_interface_ip: "0.0.0.0"
+	request_port: 3001
+	request_address: "227.128.12.26" # Multicast request address
     art_analyzer_count: 2
 
 	routing_token_config: {
@@ -54,14 +57,6 @@ outputs: {
 
 physics: {
   analyzers: {
-    requests: {
-		module_type: RequestSender
-		send_requests: true
-multicast_interface_ip: "0.0.0.0"
-		request_port: 3001
-		request_address: "227.128.12.26" # Multicast request address
-
-	}
   }
 
   producers: {
@@ -83,7 +78,6 @@ multicast_interface_ip: "0.0.0.0"
   pmod2: [ prescaleMod2 ]
   pmod3: [ prescaleMod3 ]
 
-  a1: [ requests ]
   my_output_modules: [ rootNetOutput ]
 }
 source: {
