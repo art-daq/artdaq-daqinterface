@@ -987,7 +987,8 @@ def record_directory_info(recorddir):
 
 def get_short_hostname():
     import socket
-    hostname = socket.gethostname().split('.', 1)[0]
+
+    hostname = socket.gethostname().split(".", 1)[0]
     return hostname
 
 
