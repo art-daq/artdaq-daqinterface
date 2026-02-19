@@ -986,18 +986,8 @@ def record_directory_info(recorddir):
 
 
 def get_short_hostname():
-    hostname = (
-        Popen(
-            "hostname -s",
-            executable="/bin/bash",
-            shell=True,
-            stdout=subprocess.PIPE,
-            stderr=subprocess.STDOUT,
-            encoding="UTF-8",
-        )
-        .stdout.readlines()[0]
-        .strip()
-    )
+    import socket
+    hostname = socket.gethostname().split('.', 1)[0]
     return hostname
 
 
