@@ -889,6 +889,7 @@ class DAQInterface(Component):
         self.disable_unique_rootfile_labels = False
         self.disable_private_network_bookkeeping = False
         self.allowed_processors = None
+        self.partition_label_format = None
 
         self.max_num_launch_procs_checks = 20
         self.launch_procs_wait_time = 40
@@ -1115,6 +1116,8 @@ class DAQInterface(Component):
                 self.dl_transfer = line.split()[-1].strip()
             elif "allowed_processors" in line or "allowed processors" in line:
                 self.allowed_processors = line.split()[-1].strip()
+            elif "partition_label_format" in line or "partition label format" in line:
+                self.partition_label_format = line.split()[-1].strip()
             elif "max_launch_checks" in line or "max launch checks" in line:
                 self.max_num_launch_procs_checks = int(line.split()[-1].strip())
             elif "launch_procs_wait_time" in line or "launch procs wait time" in line:
