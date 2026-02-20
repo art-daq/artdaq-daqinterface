@@ -1,4 +1,3 @@
-
 from __future__ import print_function
 import os
 import sys
@@ -105,7 +104,7 @@ def bookkeeping_for_fhicl_documents_artdaq_v3_base(self):
             )
 
             if res:
-                ids = res.group(1).split(',')
+                ids = res.group(1).split(",")
                 sz = 0
                 for id in ids:
                     try:
@@ -154,7 +153,9 @@ def bookkeeping_for_fhicl_documents_artdaq_v3_base(self):
         count = len(subsystem_fragment_ids[ss])
 
         for ss_source in self.subsystems[ss].sources:
-            if ss_source == ss: # the system can not be its own source, avoid infinite recursion
+            if (
+                ss_source == ss
+            ):  # the system can not be its own source, avoid infinite recursion
                 continue
             if self.subsystems[ss_source].fragmentMode:
                 count += calculate_expected_fragments_per_event(ss_source)
@@ -193,7 +194,6 @@ def bookkeeping_for_fhicl_documents_artdaq_v3_base(self):
                 ids += [ss_source]
 
         return ids
-
 
     expected_fragments_per_event = {}
     for ss in self.subsystems:
@@ -264,7 +264,14 @@ def bookkeeping_for_fhicl_documents_artdaq_v3_base(self):
                 self.procinfos[i_proc].fhicl_used = re.sub(
                     "fragment_ids\s*:\s*\[[0-9, ]*\]",
                     "fragment_ids: [ %s ]"
-                    % (", ".join([str(i) for i in fragment_ids[self.procinfos[i_proc].subsystem]])),
+                    % (
+                        ", ".join(
+                            [
+                                str(i)
+                                for i in fragment_ids[self.procinfos[i_proc].subsystem]
+                            ]
+                        )
+                    ),
                     self.procinfos[i_proc].fhicl_used,
                 )
 
@@ -446,11 +453,20 @@ def bookkeeping_for_fhicl_documents_artdaq_v3_base(self):
                 hms = ""
 
             transfer_to_use = self.default_transfer
-            if "BoardReader" in procinfo.name or procinfo_for_string.name == "BoardReader":
+            if (
+                "BoardReader" in procinfo.name
+                or procinfo_for_string.name == "BoardReader"
+            ):
                 transfer_to_use = self.br_transfer
-            elif "EventBuilder" in procinfo.name or procinfo_for_string.name == "EventBuilder":
+            elif (
+                "EventBuilder" in procinfo.name
+                or procinfo_for_string.name == "EventBuilder"
+            ):
                 transfer_to_use = self.eb_transfer
-            elif "DataLogger" in procinfo.name or procinfo_for_string.name == "DataLogger":
+            elif (
+                "DataLogger" in procinfo.name
+                or procinfo_for_string.name == "DataLogger"
+            ):
                 transfer_to_use = self.dl_transfer
 
             if nodetype == "sources" and "EventBuilder" in procinfo.name:
@@ -1208,7 +1224,9 @@ def bookkeeping_for_fhicl_documents_artdaq_v3_base(self):
                             if sends_to_via_RootNetOutput(
                                 possible_sender_procinfo, procinfo
                             ):
-                                init_fragment_count += art_analyzer_count(possible_sender_procinfo)
+                                init_fragment_count += art_analyzer_count(
+                                    possible_sender_procinfo
+                                )
                 elif procinfo.name == "DataLogger":
                     for possible_sender_procinfo in [
                         pi
@@ -1219,7 +1237,9 @@ def bookkeeping_for_fhicl_documents_artdaq_v3_base(self):
                         if sends_to_via_RootNetOutput(
                             possible_sender_procinfo, procinfo
                         ):
-                            init_fragment_count +=  art_analyzer_count(possible_sender_procinfo)
+                            init_fragment_count += art_analyzer_count(
+                                possible_sender_procinfo
+                            )
                 elif procinfo.name == "Dispatcher":
                     for possible_sender_procinfo in [
                         pi
@@ -1230,7 +1250,9 @@ def bookkeeping_for_fhicl_documents_artdaq_v3_base(self):
                         if sends_to_via_RootNetOutput(
                             possible_sender_procinfo, procinfo
                         ):
-                            init_fragment_count +=  art_analyzer_count(possible_sender_procinfo)
+                            init_fragment_count += art_analyzer_count(
+                                possible_sender_procinfo
+                            )
                     if (
                         init_fragment_count == 0
                     ):  # Dispatcher will _always_ receive init Fragments, this probably means we're running without DataLoggers
@@ -1243,7 +1265,9 @@ def bookkeeping_for_fhicl_documents_artdaq_v3_base(self):
                             if sends_to_via_RootNetOutput(
                                 possible_sender_procinfo, procinfo
                             ):
-                                init_fragment_count +=  art_analyzer_count(possible_sender_procinfo)
+                                init_fragment_count += art_analyzer_count(
+                                    possible_sender_procinfo
+                                )
 
                 init_fragment_counts[procinfo.name] = init_fragment_count
 

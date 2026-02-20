@@ -55,8 +55,13 @@ SOFTWARE.
 
 from __future__ import print_function
 
-__all__ = ["exc_string", "trace_string", "force_string",
-           "get_exc_string_encoding", "set_exc_string_encoding"]
+__all__ = [
+    "exc_string",
+    "trace_string",
+    "force_string",
+    "get_exc_string_encoding",
+    "set_exc_string_encoding",
+]
 
 from sys import exc_info
 from traceback import extract_stack, extract_tb
@@ -75,14 +80,16 @@ def set_exc_string_encoding(encoding):
     exc_string_encoding = encoding
 
 
-force_string_translate_map = (" ????????\t ?? ??????????????????" +
-                              "".join([chr(i) for i in range(32, 256)]))
+force_string_translate_map = " ????????\t ?? ??????????????????" + "".join(
+    [chr(i) for i in range(32, 256)]
+)
 
 
 def force_string(v):
     if isinstance(v, str):
-        v = v.decode(exc_string_encoding,
-                     "replace").encode(exc_string_encoding, "replace")
+        v = v.decode(exc_string_encoding, "replace").encode(
+            exc_string_encoding, "replace"
+        )
         return v.translate(force_string_translate_map)
     elif isinstance(v, unicode):
         v = v.encode(exc_string_encoding, "replace")
@@ -91,8 +98,7 @@ def force_string(v):
         try:
             v = str(v)
         except:
-            return ("unable to convert %s to string, str() failed" %
-                    v.__class__.__name__)
+            return "unable to convert %s to string, str() failed" % v.__class__.__name__
         else:
             return force_string(v)
 
@@ -105,8 +111,11 @@ def _reversed(r):
 
 def trace_string(tb=None):
     return " <- ".join(
-        [force_string("%s() (%s:%s)" % (m, path.split(f)[1], n))
-         for f, n, m, u in _reversed(tb or extract_stack()[:-1])])
+        [
+            force_string("%s() (%s:%s)" % (m, path.split(f)[1], n))
+            for f, n, m, u in _reversed(tb or extract_stack()[:-1])
+        ]
+    )
 
 
 def exc_string():
@@ -124,13 +133,13 @@ def exc_string():
         else:
             t = type(t).__name__
 
-        return "%s(\"%s\") in %s" % (t, v, trace_string(extract_tb(tb)))
+        return '%s("%s") in %s' % (t, v, trace_string(extract_tb(tb)))
 
     except:
         return "exc_string() failed to extract exception string"
 
 
-if __name__ == '__main__':  # run self-tests
+if __name__ == "__main__":  # run self-tests
 
     print("self-testing module exc_string.py:")
 
@@ -139,18 +148,20 @@ if __name__ == '__main__':  # run self-tests
     set_exc_string_encoding("windows-1251")
     assert get_exc_string_encoding() == "windows-1251"
 
-    russian = ("wMHCw8TFqMbHyMnKy8zNzs/Q0dLT1NXW"
-               "19jZ3Nva3d7f4OHi4+TluObn6Onq6+zt"
-               "7u/w8fLz9PX29/j5/Pv6/f7/").decode("base64")
+    russian = (
+        "wMHCw8TFqMbHyMnKy8zNzs/Q0dLT1NXW"
+        "19jZ3Nva3d7f4OHi4+TluObn6Onq6+zt"
+        "7u/w8fLz9PX29/j5/Pv6/f7/"
+    ).decode("base64")
     russian_unicode = russian.decode("windows-1251")
     assert isinstance(russian_unicode, unicode)
     ss = force_string(russian_unicode)
     assert isinstance(ss, str) and ss == russian
 
-    hebrew = "".join([unichr(i) for i in range(0x590, 0x5ff)])
+    hebrew = "".join([unichr(i) for i in range(0x590, 0x5FF)])
     assert isinstance(hebrew, unicode)
     ss = force_string(hebrew)
-    assert ss == "?" * 0x6f
+    assert ss == "?" * 0x6F
 
     assert force_string(None) == "None"
     assert force_string(10) == "10"
@@ -158,19 +169,20 @@ if __name__ == '__main__':  # run self-tests
     assert force_string(Exception(10)) == "10"
     assert force_string(Exception(russian)) == russian
     assert force_string(Exception(russian_unicode)) == (
-        "unable to convert Exception to string, str() failed")
+        "unable to convert Exception to string, str() failed"
+    )
 
     class Foo(object):
         def __str__(self):
             raise "foo"
-    assert force_string(Foo()) == ("unable to convert Foo to string, "
-                                   "str() failed")
+
+    assert force_string(Foo()) == ("unable to convert Foo to string, " "str() failed")
 
     class Bar(object):
         def __str__(self):
             return self  # nasty, eh ?
-    assert force_string(Bar()) == ("unable to convert Bar to string, "
-                                   "str() failed")
+
+    assert force_string(Bar()) == ("unable to convert Bar to string, " "str() failed")
 
     # trace_string() tests:
 
@@ -179,7 +191,8 @@ if __name__ == '__main__':  # run self-tests
     def foo():
         assert trace_string() == (
             "foo() (exc_string.py:166) <- test() (exc_string.py:170) "
-            "<- ?() (exc_string.py:172)")
+            "<- ?() (exc_string.py:172)"
+        )
 
     class bar(object):
         def test(self):
@@ -190,28 +203,31 @@ if __name__ == '__main__':  # run self-tests
     # exc_string() tests:
 
     from sys import exc_clear
+
     exc_clear()
     assert exc_string() == "no exception"
 
     try:
         raise russian
     except:
-        assert exc_string() == (
-            "str(\"%s\") in ?() (exc_string.py:181)" % russian)
+        assert exc_string() == ('str("%s") in ?() (exc_string.py:181)' % russian)
 
     try:
         # JEJ stripped leading 'u' for Python 3:
         raise "throwing unicode is deprecated"
     except:
-        assert exc_string() == ("TypeError(\"exceptions must be classes, "
-                                "instances, or strings (deprecated), not "
-                                "unicode\") in ?() (exc_string.py:186)")
+        assert exc_string() == (
+            'TypeError("exceptions must be classes, '
+            "instances, or strings (deprecated), not "
+            'unicode") in ?() (exc_string.py:186)'
+        )
     try:
         1 / 0
     except:
         assert exc_string() == (
-            "ZeroDivisionError(\"integer division or modulo by zero\") in ?() "
-            "(exc_string.py:191)")
+            'ZeroDivisionError("integer division or modulo by zero") in ?() '
+            "(exc_string.py:191)"
+        )
 
     class MyException(Exception):
         pass
@@ -220,8 +236,9 @@ if __name__ == '__main__':  # run self-tests
         raise MyException(hebrew)
     except:
         assert exc_string() == (
-            "MyException(\"unable to convert MyException to string, str() "
-            "failed\") in ?() (exc_string.py:198)")
+            'MyException("unable to convert MyException to string, str() '
+            'failed") in ?() (exc_string.py:198)'
+        )
 
     def foo():
         raise MyException(russian)
@@ -234,8 +251,9 @@ if __name__ == '__main__':  # run self-tests
         bar()
     except:
         assert exc_string() == (
-            "MyException(\"%s\") in foo() (exc_string.py:203) <- __init__() "
-            "(exc_string.py:207) <- ?() (exc_string.py:210)" % russian)
+            'MyException("%s") in foo() (exc_string.py:203) <- __init__() '
+            "(exc_string.py:207) <- ?() (exc_string.py:210)" % russian
+        )
 
     set_exc_string_encoding("ascii")
     assert get_exc_string_encoding() == "ascii"
@@ -244,9 +262,9 @@ if __name__ == '__main__':  # run self-tests
         bar()
     except:
         assert exc_string() == (
-            "MyException(\"%s\") in foo() (exc_string.py:203) <- __init__() "
-            "(exc_string.py:207) <- ?() (exc_string.py:218)"
-            % ("?" * len(russian)))
+            'MyException("%s") in foo() (exc_string.py:203) <- __init__() '
+            "(exc_string.py:207) <- ?() (exc_string.py:218)" % ("?" * len(russian))
+        )
 
     def recur():
         recur()
@@ -255,7 +273,8 @@ if __name__ == '__main__':  # run self-tests
         recur()
     except:
         assert exc_string().startswith(
-            "RuntimeError(\"maximum recursion depth exceeded\") in " +
-            "recur() (exc_string.py:223) <- " * 100)
+            'RuntimeError("maximum recursion depth exceeded") in '
+            + "recur() (exc_string.py:223) <- " * 100
+        )
 
     print("ok")
