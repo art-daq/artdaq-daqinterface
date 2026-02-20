@@ -13,8 +13,7 @@ import time
 def eq(x, y, pretty=False):
     if x != y and pretty:  # no-coverage
         pprint.PrettyPrinter().pprint((x, y))
-    assert x == y, '%s %s != %s %s!' % (type(x).__name__, x,
-                                        type(y).__name__, y)
+    assert x == y, "%s %s != %s %s!" % (type(x).__name__, x, type(y).__name__, y)
 
 
 def gt(x, y):
@@ -46,8 +45,8 @@ def wait_until(done, interval=0.01, trace=False, timeout=1.0):
         time.sleep(interval)
 
     raise NotDoneException(  # no-coverage
-        "The following function never returned True:\n%s"
-        % inspect.getsource(done))
+        "The following function never returned True:\n%s" % inspect.getsource(done)
+    )
 
 
 def remove_if_exists(f):
@@ -98,7 +97,7 @@ def is_mac():
     """
     Handle wimpy max open files on Mac (multi-thread tests)
     """
-    return 'darwin' in sys.platform
+    return "darwin" in sys.platform
 
 
 def convert_to_time(t):
@@ -115,6 +114,7 @@ def convert_to_time(t):
 def complement(f):
     def inner(*args, **kwargs):
         return not f(*args, **kwargs)
+
     return inner
 
 
@@ -122,8 +122,7 @@ def stringify_times(d):
     if type(d) is datetime.datetime:
         return str(d)
     if type(d) is dict:
-        return dict((k, stringify_times(v))
-                    for (k, v) in d.items())
+        return dict((k, stringify_times(v)) for (k, v) in d.items())
     elif type(d) is list:
         return map(stringify_times, d)
     elif type(d) is tuple:
@@ -137,11 +136,13 @@ def print_on_exc(f):  # no-coverage
     Use this decorator when running the test server to print out
     exceptions as they occur
     """
+
     def new(*args, **kwargs):
         try:
             return f(*args, **kwargs)
         except:
             print(exc_string())
+
     return new
 
 

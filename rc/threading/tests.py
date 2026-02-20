@@ -1,7 +1,7 @@
-
 raise Exception("JCF, Sep-6-2017: At least for the time being, this file is deprecated")
 
 import sys
+
 sys.path.append("/home/nfs/dunedaq/jcfree/standalone_daq")
 
 from rc.util import eq, wait_until
@@ -53,6 +53,7 @@ def test_long_thread_periods_can_be_interrupted():
     t0 = time.time()
 
     with threadable(func=increment, period=100) as t:
+
         def done(i):
             if acc[0] > i:
                 return True
