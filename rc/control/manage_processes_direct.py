@@ -363,7 +363,14 @@ def launch_procs_base(self):
                 bootfile_name_to_execname(procinfo.name),
                 procinfo.port,
                 procinfo.rank,
-                procinfo.label + "" if self.partition_label_format is None else (self.partition_label_format % (os.environ["DAQINTERFACE_PARTITION_NUMBER"])),
+                (
+                    procinfo.label + ""
+                    if self.partition_label_format is None
+                    else (
+                        self.partition_label_format
+                        % (os.environ["DAQINTERFACE_PARTITION_NUMBER"])
+                    )
+                ),
                 os.environ["DAQINTERFACE_PARTITION_NUMBER"],
             )
         )
