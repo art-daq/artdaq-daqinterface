@@ -1,6 +1,5 @@
   daq: {
   fragment_receiver: {
-	mpi_sync_interval: 50
 
 	# CommandableFragmentGenerator Configuration:
 	fragment_ids: []
