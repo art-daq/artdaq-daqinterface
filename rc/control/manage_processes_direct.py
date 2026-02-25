@@ -840,9 +840,15 @@ def get_pids_and_labels_on_host(host, procinfos):
     cleaned_lines = [line for line in grepped_lines if " ssh " not in line]
 
     labels_of_found_processes = []
-
+    extra = (
+        ""
+        if self.partition_label_format is None
+        else (
+            self.partition_label_format % (os.environ["DAQINTERFACE_PARTITION_NUMBER"])
+        )
+    )
     for line in cleaned_lines:
-        res = re.search(r"application_name:\s+(\S+)", line)
+        res = re.search(r"application_name:\s+(\S+)" + extra, line)
         assert res
         labels_of_found_processes.append(res.group(1))
 
