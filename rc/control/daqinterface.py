@@ -1847,10 +1847,9 @@ class DAQInterface(Component):
                 )
                 out, err = proc.communicate()
                 proclines = out.strip().split("\n")
+                proclines = [line for line in proclines if re.search(r"\.log$", line)]
 
-                if len(
-                    [line for line in proclines if re.search(r"\.log$", line)]
-                ) == len(proctypes):
+                if len(proclines) == len(proctypes):
                     break  # Success
                 else:
                     if num_logfile_checks == max_num_logfile_checks:
