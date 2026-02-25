@@ -1,6 +1,5 @@
   daq: {
   fragment_receiver: {
-	mpi_sync_interval: 50
 
 	# CommandableFragmentGenerator Configuration:
 fragment_ids: []
@@ -33,8 +32,8 @@ multicast_interface_ip: "0.0.0.0"
 
 request_window_offset: 1 # Request message contains tzero. Window will be from tzero - offset to tz-o + width
 request_window_width: 3 # These settings correspond to "one before, ts, one after"
-stale_request_timeout: 0xFFFFFFFF # How long to wait before discarding request messages that are outside the available data
 request_windows_are_unique: false # If request windows are unique, avoids a copy operation, but the same data point cannot be used for two requests. If this is not anticipated, leave set to "true"
+send_missing_request_fragments: false
 
 separate_data_thread: true # MUST be true for requests to be applied! If requesting is not desired, but a separate readout thread is, set this to true, requests_enabled to false and request_mode to ignored.
 

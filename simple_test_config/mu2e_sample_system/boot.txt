@@ -1,5 +1,5 @@
 
-DAQ setup script: $yourArtdaqInstallationDir/setupARTDAQDEMO
+DAQ setup script: $yourArtdaqInstallationDir/artdaq_demo_rte.sh
 
 PMT host: localhost
 request_address: "227.128.130.130"
