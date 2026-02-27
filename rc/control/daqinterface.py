@@ -1893,7 +1893,7 @@ class DAQInterface(Component):
 
             for i_p, proctype in enumerate(proctypes):
                 logfile = parsed_logfiles[i_p]
-                if "BoardReader" in proctypes[i_p]:
+                if "BoardReader" in proctype:
                     self.boardreader_log_filenames.append(
                         "%s:%s"
                         % (
@@ -1901,7 +1901,7 @@ class DAQInterface(Component):
                             logfile,
                         )
                     )
-                elif "EventBuilder" in proctypes[i_p]:
+                elif "EventBuilder" in proctype:
                     self.eventbuilder_log_filenames.append(
                         "%s:%s"
                         % (
@@ -1909,7 +1909,7 @@ class DAQInterface(Component):
                             logfile,
                         )
                     )
-                elif "DataLogger" in proctypes[i_p]:
+                elif "DataLogger" in proctype:
                     self.datalogger_log_filenames.append(
                         "%s:%s"
                         % (
@@ -1917,7 +1917,7 @@ class DAQInterface(Component):
                             logfile,
                         )
                     )
-                elif "Dispatcher" in proctypes[i_p]:
+                elif "Dispatcher" in proctype:
                     self.dispatcher_log_filenames.append(
                         "%s:%s"
                         % (
@@ -1925,7 +1925,7 @@ class DAQInterface(Component):
                             logfile,
                         )
                     )
-                elif "RoutingManager" in proctypes[i_p]:
+                elif "RoutingManager" in proctype:
                     self.routingmanager_log_filenames.append(
                         "%s:%s"
                         % (
