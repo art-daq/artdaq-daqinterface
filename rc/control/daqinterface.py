@@ -1800,15 +1800,19 @@ class DAQInterface(Component):
 
             cmds.append('short_hostname=$( hostname | sed -r "s/([^.]+).*/\\1/" )')
             for i_p, procinfo in enumerate(procinfos_for_host):
-
+                expected_label = procinfo.label + (
+                    ""
+                    if self.partition_label_format is None
+                    else self.partition_label_format % (self.partition_number)
+                )
                 output_logdir = "%s/%s-$short_hostname-%s" % (
                     self.log_directory,
-                    procinfo.label,
+                    expected_label,
                     procinfo.port,
                 )
                 cmds.append(
                     "filename_%s=$( ls -tr1 %s/%s-$short_hostname-%s*.log | tail -1 )"
-                    % (i_p, output_logdir, procinfo.label, procinfo.port)
+                    % (i_p, output_logdir, expected_label, procinfo.port)
                 )
                 cmds.append(
                     "if [[ -z $filename_%s ]]; then echo No logfile found for process %s on %s after looking in %s >&2 ; exit 1; fi"
@@ -1954,7 +1958,7 @@ class DAQInterface(Component):
                 proctype = ""
 
                 for procinfo in self.procinfos:
-                    if label == procinfo.label:
+                    if procinfo.label in label:
                         proctype = procinfo.name
 
                 if "BoardReader" in proctype:

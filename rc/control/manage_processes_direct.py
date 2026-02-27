@@ -363,8 +363,9 @@ def launch_procs_base(self):
                 bootfile_name_to_execname(procinfo.name),
                 procinfo.port,
                 procinfo.rank,
-                (
-                    procinfo.label + ""
+                procinfo.label
+                + (
+                    ""
                     if self.partition_label_format is None
                     else (
                         self.partition_label_format
@@ -840,15 +841,9 @@ def get_pids_and_labels_on_host(host, procinfos):
     cleaned_lines = [line for line in grepped_lines if " ssh " not in line]
 
     labels_of_found_processes = []
-    extra = (
-        ""
-        if self.partition_label_format is None
-        else (
-            self.partition_label_format % (os.environ["DAQINTERFACE_PARTITION_NUMBER"])
-        )
-    )
+
     for line in cleaned_lines:
-        res = re.search(r"application_name:\s+(\S+)" + extra, line)
+        res = re.search(r"application_name:\s+(\S+)", line)
         assert res
         labels_of_found_processes.append(res.group(1))
 
@@ -902,7 +897,15 @@ def check_proc_heartbeats_base(self, requireSuccess=True):
         for procinfo in [
             procinfo for procinfo in self.procinfos if procinfo.host == host
         ]:
-            if procinfo.label in labels_of_found_processes:
+            expected_label = procinfo.label + (
+                ""
+                if self.partition_label_format is None
+                else (
+                    self.partition_label_format
+                    % (os.environ["DAQINTERFACE_PARTITION_NUMBER"])
+                )
+            )
+            if expected_label in labels_of_found_processes:
                 found_processes.append(procinfo)
             else:
                 is_all_ok = False
