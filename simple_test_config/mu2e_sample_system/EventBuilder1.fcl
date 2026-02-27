@@ -2,21 +2,24 @@
 
 daq: {
   event_builder: {
-	expected_fragments_per_event: 0  # Will be set by DAQInterface
-	use_art: true
-	print_event_store_stats: true
-	buffer_count: 20
-	max_incomplete_events: 75 # Same as boardreader sync interval
-	verbose: true
-	init_fragment_count: 2
-	send_requests: false
+    expected_fragments_per_event: 0  # Will be set by DAQInterface
+    use_art: true
+    print_event_store_stats: true
+    buffer_count: 20
+    max_incomplete_events: 75 # Same as boardreader sync interval
+    verbose: true
+    init_fragment_count: 2
+    send_requests: true
+    multicast_interface_ip: "0.0.0.0"
+    request_port: 3001
+    request_address: "227.128.12.26" # Multicast request address
     art_analyzer_count: 2
 
-	routing_token_config: {
-	use_routing_manager: false
-	}
+    routing_token_config: {
+      use_routing_manager: false
+    }
 
-	sources: { }
+    sources: { }
   }
 
   metrics: {
@@ -54,14 +57,6 @@ outputs: {
 
 physics: {
   analyzers: {
-    requests: {
-		module_type: RequestSender
-		send_requests: true
-multicast_interface_ip: "0.0.0.0"
-		request_port: 3001
-		request_address: "227.128.12.26" # Multicast request address
-
-	}
   }
 
   producers: {
@@ -83,7 +78,6 @@ multicast_interface_ip: "0.0.0.0"
   pmod2: [ prescaleMod2 ]
   pmod3: [ prescaleMod3 ]
 
-  a1: [ requests ]
   my_output_modules: [ rootNetOutput ]
 }
 source: {
