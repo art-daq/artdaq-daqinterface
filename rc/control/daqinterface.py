@@ -16,6 +16,7 @@ from time import sleep, time
 import traceback
 import re
 import string
+import shlex
 import glob
 import stat
 from threading import RLock
@@ -1817,37 +1818,54 @@ class DAQInterface(Component):
                     % (i_p, self.launch_procs_time, procinfo.label, procinfo.host, i_p)
                 )
                 cmds.append(
-                    "echo Logfile for process %s on %s is $filename_%s"
-                    % (procinfo.label, procinfo.host, i_p)
+                    "echo __DAQLOG__%s__ $filename_%s" % (i_p, i_p)
                 )
                 proctypes.append(procinfo.name)
 
             cmd = "; ".join(cmds)
 
-            if not host_is_local(host):
-                cmd = "ssh -o BatchMode=yes -f " + host + " '" + cmd + "'"
-
             num_logfile_checks = 0
             max_num_logfile_checks = 5
+            parsed_logfiles = {}
+            out = ""
+            err = ""
 
             while True:
 
                 num_logfile_checks += 1
 
-                proc = Popen(
-                    cmd,
-                    executable="/bin/bash",
-                    shell=True,
-                    stdout=subprocess.PIPE,
-                    stderr=subprocess.PIPE,
-                    encoding="utf-8",
-                )
-                out, err = proc.communicate()
-                proclines = out.strip().split("\n")
+                if host_is_local(host):
+                    proc = subprocess.run(
+                        ["/bin/bash", "-lc", cmd],
+                        stdout=subprocess.PIPE,
+                        stderr=subprocess.PIPE,
+                        encoding="utf-8",
+                    )
+                else:
+                    proc = subprocess.run(
+                        [
+                            "ssh",
+                            "-o",
+                            "BatchMode=yes",
+                            host,
+                            "bash",
+                            "-lc",
+                            shlex.quote(cmd),
+                        ],
+                        stdout=subprocess.PIPE,
+                        stderr=subprocess.PIPE,
+                        encoding="utf-8",
+                    )
 
-                if len(
-                    [line for line in proclines if re.search(r"\.log$", line)]
-                ) == len(proctypes):
+                out, err = proc.stdout, proc.stderr
+
+                parsed_logfiles = {}
+                for line in out.splitlines():
+                    match = re.match(r"^__DAQLOG__(\d+)__\s+(.+)$", line.strip())
+                    if match:
+                        parsed_logfiles[int(match.group(1))] = match.group(2).strip()
+
+                if proc.returncode == 0 and len(parsed_logfiles) == len(proctypes):
                     break  # Success
                 else:
                     if num_logfile_checks == max_num_logfile_checks:
@@ -1875,13 +1893,14 @@ class DAQInterface(Component):
                             2
                         )  # Give the logfiles a bit of time to appear before the next check
 
-            for i_p in range(len(proclines)):
+            for i_p, proctype in enumerate(proctypes):
+                logfile = parsed_logfiles[i_p]
                 if "BoardReader" in proctypes[i_p]:
                     self.boardreader_log_filenames.append(
                         "%s:%s"
                         % (
                             full_hostname,
-                            proclines[i_p].strip().split()[-1],
+                            logfile,
                         )
                     )
                 elif "EventBuilder" in proctypes[i_p]:
@@ -1889,7 +1908,7 @@ class DAQInterface(Component):
                         "%s:%s"
                         % (
                             full_hostname,
-                            proclines[i_p].strip().split()[-1],
+                            logfile,
                         )
                     )
                 elif "DataLogger" in proctypes[i_p]:
@@ -1897,7 +1916,7 @@ class DAQInterface(Component):
                         "%s:%s"
                         % (
                             full_hostname,
-                            proclines[i_p].strip().split()[-1],
+                            logfile,
                         )
                     )
                 elif "Dispatcher" in proctypes[i_p]:
@@ -1905,7 +1924,7 @@ class DAQInterface(Component):
                         "%s:%s"
                         % (
                             full_hostname,
-                            proclines[i_p].strip().split()[-1],
+                            logfile,
                         )
                     )
                 elif "RoutingManager" in proctypes[i_p]:
@@ -1913,7 +1932,7 @@ class DAQInterface(Component):
                         "%s:%s"
                         % (
                             full_hostname,
-                            proclines[i_p].strip().split()[-1],
+                            logfile,
                         )
                     )
                 else:
