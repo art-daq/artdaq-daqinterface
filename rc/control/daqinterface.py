@@ -1384,16 +1384,16 @@ class DAQInterface(Component):
     # literal Python exception got thrown at some point.
 
     def check_proc_exceptions(self):
-
         if self.exception:
-            return
+            return False
 
+        all_ok = True
         for procinfo in self.procinfos:
 
             try:
-                procinfo.lastreturned = procinfo.server.daq.status()
+                procinfo.lastreturned = procinfo.statusServer.daq.status()
             except Exception as ex:
-
+                all_ok = False # We're going to have to check ps output on each host
                 self.print_log(
                     "w",
                     make_paragraph(
@@ -1447,6 +1447,9 @@ class DAQInterface(Component):
                             )
                         )
                     )
+                elif isinstance(ex, TimeoutError):
+                    # Already printed a log message, just continue
+                    continue
                 else:
                     raise
 
@@ -1455,7 +1458,7 @@ class DAQInterface(Component):
                 procinfo.state = procinfo.lastreturned
 
             if procinfo.state == "Error":
-
+                all_ok = False # Errors are bad, too
                 errmsg = (
                     '%s: "Error" state found to have been returned by process %s at %s:%s; please check MessageViewer if up and/or the process logfile, %s'
                     % (
@@ -1485,6 +1488,8 @@ class DAQInterface(Component):
                     "Processes remaining:\n%s"
                     % ("\n".join([procinfo.label for procinfo in self.procinfos])),
                 )
+
+            return all_ok
 
     def init_process_requirements(self):
         self.overriding_process_requirements = []
@@ -3367,6 +3372,7 @@ class DAQInterface(Component):
 
                 try:
                     procinfo.server = TimeoutServerProxy(procinfo.socketstring, timeout)
+                    procinfo.statusServer = TimeoutServerProxy(procinfo.socketstring, 1) # Times out quickly
                 except Exception:
                     self.print_log("e", traceback.format_exc())
 
@@ -3381,7 +3387,7 @@ class DAQInterface(Component):
             for procinfo in self.procinfos:
                 while True:
                     try:
-                        procinfo.lastreturned = procinfo.server.daq.status()
+                        procinfo.lastreturned = procinfo.statusServer.daq.status()
                         break
                     except Exception as ex:
                         sleep(1)
@@ -4426,8 +4432,10 @@ class DAQInterface(Component):
                 and self.state(self.name) != "booting"
                 and self.state(self.name) != "terminating"
             ):
-                self.check_proc_heartbeats()
-                self.check_proc_exceptions()
+                all_ok = self.check_proc_exceptions()
+                if not all_ok:
+                    self.print_log("w", "Could not collect status information for all processes via XMLRPC, performing ps checks")
+                    self.check_proc_heartbeats()
                 self.perform_periodic_action()
 
         except Exception:
