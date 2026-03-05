@@ -1795,6 +1795,7 @@ class DAQInterface(Component):
             ]
             cmds = []
             proctypes = []
+            proclabels = []
 
             cmds.append('short_hostname=$( hostname | sed -r "s/([^.]+).*/\\1/" )')
             for i_p, procinfo in enumerate(procinfos_for_host):
@@ -1819,14 +1820,12 @@ class DAQInterface(Component):
                 )
                 cmds.append("echo __DAQLOG__%s__ $filename_%s" % (i_p, i_p))
                 proctypes.append(procinfo.name)
+                proclabels.append(procinfo.label)
 
             cmd = "; ".join(cmds)
 
             num_logfile_checks = 0
             max_num_logfile_checks = 5
-            parsed_logfiles = {}
-            out = ""
-            err = ""
 
             while True:
 
@@ -1846,7 +1845,7 @@ class DAQInterface(Component):
                             "-o",
                             "BatchMode=yes",
                             host,
-                            "bash",
+                            "/bin/bash",
                             "-lc",
                             shlex.quote(cmd),
                         ],
@@ -1857,11 +1856,12 @@ class DAQInterface(Component):
 
                 out, err = proc.stdout, proc.stderr
 
-                parsed_logfiles = {}
+                parsed_logfiles = []
                 for line in out.splitlines():
-                    match = re.match(r"^__DAQLOG__(\d+)__\s+(.+)$", line.strip())
+                    line = line.strip()
+                    match = re.match(r"^__DAQLOG__\d+__\s+(.+)$", line)
                     if match:
-                        parsed_logfiles[int(match.group(1))] = match.group(2).strip()
+                        parsed_logfiles.append(match.group(1).strip())
 
                 if proc.returncode == 0 and len(parsed_logfiles) == len(proctypes):
                     break  # Success
@@ -1893,7 +1893,13 @@ class DAQInterface(Component):
 
             for i_p, proctype in enumerate(proctypes):
                 logfile = parsed_logfiles[i_p]
-                if "BoardReader" in proctypes[i_p]:
+                self.print_log(
+                    "d",
+                    "Logfile association: host=%s component=%s label=%s logfile=%s"
+                    % (full_hostname, proctype, proclabels[i_p], logfile),
+                    2,
+                )
+                if "BoardReader" in proctype:
                     self.boardreader_log_filenames.append(
                         "%s:%s"
                         % (
@@ -1901,7 +1907,7 @@ class DAQInterface(Component):
                             logfile,
                         )
                     )
-                elif "EventBuilder" in proctypes[i_p]:
+                elif "EventBuilder" in proctype:
                     self.eventbuilder_log_filenames.append(
                         "%s:%s"
                         % (
@@ -1909,7 +1915,7 @@ class DAQInterface(Component):
                             logfile,
                         )
                     )
-                elif "DataLogger" in proctypes[i_p]:
+                elif "DataLogger" in proctype:
                     self.datalogger_log_filenames.append(
                         "%s:%s"
                         % (
@@ -1917,7 +1923,7 @@ class DAQInterface(Component):
                             logfile,
                         )
                     )
-                elif "Dispatcher" in proctypes[i_p]:
+                elif "Dispatcher" in proctype:
                     self.dispatcher_log_filenames.append(
                         "%s:%s"
                         % (
@@ -1925,7 +1931,7 @@ class DAQInterface(Component):
                             logfile,
                         )
                     )
-                elif "RoutingManager" in proctypes[i_p]:
+                elif "RoutingManager" in proctype:
                     self.routingmanager_log_filenames.append(
                         "%s:%s"
                         % (
