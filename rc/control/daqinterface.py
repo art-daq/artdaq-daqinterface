@@ -16,6 +16,7 @@ from time import sleep, time
 import traceback
 import re
 import string
+import shlex
 import glob
 import stat
 from threading import RLock
@@ -1794,6 +1795,7 @@ class DAQInterface(Component):
             ]
             cmds = []
             proctypes = []
+            proclabels = []
 
             cmds.append('short_hostname=$( hostname | sed -r "s/([^.]+).*/\\1/" )')
             for i_p, procinfo in enumerate(procinfos_for_host):
@@ -1816,16 +1818,11 @@ class DAQInterface(Component):
                     'if (( $( echo "$timestamp_%s < %f" | bc -l ) )); then echo Most recent logfile found in expected output directory for process %s on %s, $filename_%s, is too old to be the logfile for the process in this run >&2 ; exit 1; fi'
                     % (i_p, self.launch_procs_time, procinfo.label, procinfo.host, i_p)
                 )
-                cmds.append(
-                    "echo Logfile for process %s on %s is $filename_%s"
-                    % (procinfo.label, procinfo.host, i_p)
-                )
+                cmds.append("echo __DAQLOG__%s__ $filename_%s" % (i_p, i_p))
                 proctypes.append(procinfo.name)
+                proclabels.append(procinfo.label)
 
             cmd = "; ".join(cmds)
-
-            if not host_is_local(host):
-                cmd = "ssh -o BatchMode=yes -f " + host + " '" + cmd + "'"
 
             num_logfile_checks = 0
             max_num_logfile_checks = 5
@@ -1834,19 +1831,39 @@ class DAQInterface(Component):
 
                 num_logfile_checks += 1
 
-                proc = Popen(
-                    cmd,
-                    executable="/bin/bash",
-                    shell=True,
-                    stdout=subprocess.PIPE,
-                    stderr=subprocess.PIPE,
-                    encoding="utf-8",
-                )
-                out, err = proc.communicate()
-                proclines = out.strip().split("\n")
-                proclines = [line for line in proclines if re.search(r"\.log$", line)]
+                if host_is_local(host):
+                    proc = subprocess.run(
+                        ["/bin/bash", "-lc", cmd],
+                        stdout=subprocess.PIPE,
+                        stderr=subprocess.PIPE,
+                        encoding="utf-8",
+                    )
+                else:
+                    proc = subprocess.run(
+                        [
+                            "ssh",
+                            "-o",
+                            "BatchMode=yes",
+                            host,
+                            "/bin/bash",
+                            "-lc",
+                            shlex.quote(cmd),
+                        ],
+                        stdout=subprocess.PIPE,
+                        stderr=subprocess.PIPE,
+                        encoding="utf-8",
+                    )
 
-                if len(proclines) == len(proctypes):
+                out, err = proc.stdout, proc.stderr
+
+                parsed_logfiles = []
+                for line in out.splitlines():
+                    line = line.strip()
+                    match = re.match(r"^__DAQLOG__\d+__\s+(.+)$", line)
+                    if match:
+                        parsed_logfiles.append(match.group(1).strip())
+
+                if proc.returncode == 0 and len(parsed_logfiles) == len(proctypes):
                     break  # Success
                 else:
                     if num_logfile_checks == max_num_logfile_checks:
@@ -1874,45 +1891,52 @@ class DAQInterface(Component):
                             2
                         )  # Give the logfiles a bit of time to appear before the next check
 
-            for i_p in range(len(proclines)):
-                if "BoardReader" in proctypes[i_p]:
+            for i_p, proctype in enumerate(proctypes):
+                logfile = parsed_logfiles[i_p]
+                self.print_log(
+                    "d",
+                    "Logfile association: host=%s component=%s label=%s logfile=%s"
+                    % (full_hostname, proctype, proclabels[i_p], logfile),
+                    2,
+                )
+                if "BoardReader" in proctype:
                     self.boardreader_log_filenames.append(
                         "%s:%s"
                         % (
                             full_hostname,
-                            proclines[i_p].strip().split()[-1],
+                            logfile,
                         )
                     )
-                elif "EventBuilder" in proctypes[i_p]:
+                elif "EventBuilder" in proctype:
                     self.eventbuilder_log_filenames.append(
                         "%s:%s"
                         % (
                             full_hostname,
-                            proclines[i_p].strip().split()[-1],
+                            logfile,
                         )
                     )
-                elif "DataLogger" in proctypes[i_p]:
+                elif "DataLogger" in proctype:
                     self.datalogger_log_filenames.append(
                         "%s:%s"
                         % (
                             full_hostname,
-                            proclines[i_p].strip().split()[-1],
+                            logfile,
                         )
                     )
-                elif "Dispatcher" in proctypes[i_p]:
+                elif "Dispatcher" in proctype:
                     self.dispatcher_log_filenames.append(
                         "%s:%s"
                         % (
                             full_hostname,
-                            proclines[i_p].strip().split()[-1],
+                            logfile,
                         )
                     )
-                elif "RoutingManager" in proctypes[i_p]:
+                elif "RoutingManager" in proctype:
                     self.routingmanager_log_filenames.append(
                         "%s:%s"
                         % (
                             full_hostname,
-                            proclines[i_p].strip().split()[-1],
+                            logfile,
                         )
                     )
                 else:
