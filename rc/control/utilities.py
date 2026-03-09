@@ -1226,21 +1226,22 @@ def get_setup_commands(spackdir=None, log_file=None):
 
 
 def kill_tail_f():
-    tail_pids = get_pids(
-        "%s.*tail -f %s"
-        % (os.environ["DAQINTERFACE_TTY"], os.environ["DAQINTERFACE_LOGFILE"])
-    )
-    if len(tail_pids) > 0:
-        status = Popen(
-            "kill %s" % (" ".join(tail_pids)),
-            shell=True,
-            stdout=subprocess.DEVNULL,
-            stderr=subprocess.DEVNULL,
-        ).wait()
-        if status != 0:
-            print(
-                "There was a problem killing \"tail -f\" commands in this terminal; you'll want to do this manually or you'll get confusing output moving forward"
-            )
+    if "DAQINTERFACE_TTY" in os.environ and "DAQINTERFACE_LOGFILE" in os.environ:
+        tail_pids = get_pids(
+            "%s.*tail -f %s"
+            % (os.environ["DAQINTERFACE_TTY"], os.environ["DAQINTERFACE_LOGFILE"])
+        )
+        if len(tail_pids) > 0:
+            status = Popen(
+                "kill %s" % (" ".join(tail_pids)),
+                shell=True,
+                stdout=subprocess.DEVNULL,
+                stderr=subprocess.DEVNULL,
+            ).wait()
+            if status != 0:
+                print(
+                    "There was a problem killing \"tail -f\" commands in this terminal; you'll want to do this manually or you'll get confusing output moving forward"
+                )
 
 
 if __name__ == "__main__":
