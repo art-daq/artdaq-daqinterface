@@ -615,6 +615,88 @@ def bookkeeping_for_fhicl_documents_artdaq_v3_base(self):
                     )
                 )
 
+    # Pre-flight validation: check that required FHiCL configuration parameters
+    # are present before attempting bookkeeping substitutions.  Bookkeeping
+    # uses re.sub to update these parameters in-place; if a required parameter
+    # is absent re.sub silently does nothing, leaving the process with
+    # incorrect or missing configuration.
+
+    for procinfo in self.procinfos:
+
+        if "RoutingManager" in procinfo.name:
+            continue
+
+        fhicl_with_leading_newline = "\n" + procinfo.fhicl_used
+
+        # EventBuilders must have expected_fragments_per_event so that
+        # bookkeeping can set the correct per-subsystem fragment count.
+        if "EventBuilder" in procinfo.name:
+            if not re.search(
+                r"\n[^#\n]*expected_fragments_per_event\s*:",
+                fhicl_with_leading_newline,
+            ):
+                raise Exception(
+                    make_paragraph(
+                        "Required FHiCL parameter 'expected_fragments_per_event' was not "
+                        "found in the configuration for %s (%s). DAQInterface sets this "
+                        "parameter during bookkeeping - please add "
+                        "'expected_fragments_per_event: 0' (or any placeholder value) to "
+                        "the FHiCL document."
+                        % (procinfo.label, procinfo.name)
+                    )
+                )
+
+        # DataLoggers and Dispatchers have expected_fragments_per_event set to
+        # 1 by bookkeeping when the parameter is present; warn if it is missing.
+        if "DataLogger" in procinfo.name or "Dispatcher" in procinfo.name:
+            if not re.search(
+                r"\n[^#\n]*expected_fragments_per_event\s*:",
+                fhicl_with_leading_newline,
+            ):
+                self.print_log(
+                    "w",
+                    make_paragraph(
+                        "FHiCL parameter 'expected_fragments_per_event' was not found in "
+                        "the configuration for %s (%s). DAQInterface sets this to 1 "
+                        "during bookkeeping when the parameter is present - consider "
+                        "adding 'expected_fragments_per_event: 0' to the FHiCL document."
+                        % (procinfo.label, procinfo.name)
+                    ),
+                )
+
+        # Non-BoardReader processes receive data and must have a 'sources'
+        # table placeholder so that bookkeeping can fill in the correct
+        # upstream connections.
+        if "BoardReader" not in procinfo.name:
+            (sources_start, _) = table_range(procinfo.fhicl_used, "sources")
+            if sources_start == -1:
+                raise Exception(
+                    make_paragraph(
+                        "Required FHiCL table 'sources' was not found in the "
+                        "configuration for %s (%s). DAQInterface fills in this table "
+                        "during bookkeeping - please add 'sources: {}' to the FHiCL "
+                        "document."
+                        % (procinfo.label, procinfo.name)
+                    )
+                )
+
+        # BoardReader processes must have a 'destinations' table placeholder
+        # so that bookkeeping can fill in the EventBuilders to send data to.
+        if "BoardReader" in procinfo.name:
+            (destinations_start, _) = table_range(
+                procinfo.fhicl_used, "destinations"
+            )
+            if destinations_start == -1:
+                raise Exception(
+                    make_paragraph(
+                        "Required FHiCL table 'destinations' was not found in the "
+                        "configuration for %s (%s). DAQInterface fills in this table "
+                        "during bookkeeping - please add 'destinations: {}' to the "
+                        "FHiCL document."
+                        % (procinfo.label, procinfo.name)
+                    )
+                )
+
     for i_proc in range(len(self.procinfos)):
 
         for tablename in ["sources", "destinations"]:
