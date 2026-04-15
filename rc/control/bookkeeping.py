@@ -149,6 +149,47 @@ def bookkeeping_for_fhicl_documents_artdaq_v3_base(self):
     # subsystems upstream whose eventbuilders send fragments down to
     # the subsystem in question
 
+    # Before any recursive traversal, check the subsystem graph for
+    # cycles, which would cause infinite recursion with an unhelpful
+    # "maximum recursion depth exceeded" error.
+
+    def find_cycle_in_subsystem_graph():
+        visited = set()
+        in_stack = set()
+
+        def dfs(ss):
+            visited.add(ss)
+            in_stack.add(ss)
+            for ss_source in self.subsystems[ss].sources:
+                if ss_source not in self.subsystems:
+                    continue
+                if ss_source not in visited:
+                    cycle_path = dfs(ss_source)
+                    if cycle_path is not None:
+                        return [ss] + cycle_path
+                elif ss_source in in_stack:
+                    return [ss, ss_source]
+            in_stack.discard(ss)
+            return None
+
+        for ss in self.subsystems:
+            if ss not in visited:
+                cycle_path = dfs(ss)
+                if cycle_path is not None:
+                    return cycle_path
+        return None
+
+    cycle = find_cycle_in_subsystem_graph()
+    if cycle is not None:
+        raise Exception(
+            make_paragraph(
+                "Circular dependency detected in the subsystem sources configuration: %s. "
+                "Each subsystem's 'sources' must form a directed acyclic graph (DAG). "
+                "Please check your subsystem settings and remove the circular reference."
+                % (" -> ".join(str(s) for s in cycle))
+            )
+        )
+
     def calculate_expected_fragments_per_event(ss):
         count = len(subsystem_fragment_ids[ss])
 
