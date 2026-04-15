@@ -7,3 +7,4 @@ obj/*
 core.*
 spack-build-*
 build-linux-*
+rc/control/__pycache__/
