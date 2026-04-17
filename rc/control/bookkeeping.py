@@ -20,9 +20,9 @@ from rc.control.utilities import zero_out_last_subnet
 # ── Precompiled regex patterns (module-level, compiled once at import) ──
 
 _RE_MAX_FRAG_SIZE = re.compile(
-    r"\n[^#]*max_fragment_size_bytes\s*:\s*([0-9\.exabcdefABCDEF]+)")
+    r"\n[^\n#]*max_fragment_size_bytes\s*:\s*([0-9\.exabcdefABCDEF]+)")
 _RE_MAX_EVT_SIZE_SEARCH = re.compile(
-    r"\n[^#]*max_event_size_bytes\s*:\s*[0-9\.e]+")
+    r"\n[^\n#]*max_event_size_bytes\s*:\s*[0-9\.e]+")
 _RE_MAX_EVT_SIZE_VALUE = re.compile(
     r"\n\s*max_event_size_bytes\s*:\s*([0-9\.e]+)")
 _RE_MAX_EVT_SIZE_SUB = re.compile(
@@ -34,7 +34,7 @@ _RE_FRAGMENT_ID = re.compile(
 _RE_FRAGMENT_IDS = re.compile(
     r"\n\s*fragment_ids\s*:\s*\[\s*([0-9,\n ]+)\s*\]")
 _RE_FRAGMENT_IDS_SEARCH = re.compile(
-    r"\n[^#]*fragment_ids\s*:\s*\[[0-9, ]*\]")
+    r"\n[^\n#]*fragment_ids\s*:\s*\[[0-9, ]*\]")
 _RE_FRAGMENT_IDS_SUB = re.compile(
     r"fragment_ids\s*:\s*\[[0-9, ]*\]")
 _RE_SENDS_NO_FRAGS = re.compile(
