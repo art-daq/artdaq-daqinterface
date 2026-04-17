@@ -5,6 +5,7 @@ import sys
 sys.path.append(os.environ["ARTDAQ_DAQINTERFACE_DIR"])
 
 import re
+import time
 from concurrent.futures import ThreadPoolExecutor, as_completed
 
 from rc.control.utilities import table_range
@@ -70,6 +71,9 @@ _RE_SEND_REQUESTS = re.compile(
 
 def bookkeeping_for_fhicl_documents_artdaq_v3_base(self):
 
+    _bk_start = time.time()
+    _bk_section_start = _bk_start
+
     # Start calculating values (fragment counts, memory sizes, etc.)
     # which will need to appear in the FHiCL
 
@@ -119,6 +123,9 @@ def bookkeeping_for_fhicl_documents_artdaq_v3_base(self):
                         % (procinfo.label, os.environ["DAQINTERFACE_SETTINGS"])
                     )
                 )
+
+    self.print_log("d", "Bookkeeping: max_fragment_size extraction took %.4f s" % (time.time() - _bk_section_start))
+    _bk_section_start = time.time()
 
     # Now loop over the boardreaders again to determine
     # subsystem-level things, such as the number of fragments per
@@ -249,6 +256,9 @@ def bookkeeping_for_fhicl_documents_artdaq_v3_base(self):
         _frag_ids_cache[ss] = ids
         return ids
 
+    self.print_log("d", "Bookkeeping: boardreader fragment counting took %.4f s" % (time.time() - _bk_section_start))
+    _bk_section_start = time.time()
+
     expected_fragments_per_event = {}
     max_event_sizes = {}
     fragment_ids = {}
@@ -257,6 +267,9 @@ def bookkeeping_for_fhicl_documents_artdaq_v3_base(self):
         expected_fragments_per_event[ss] = calculate_expected_fragments_per_event(ss)
         max_event_sizes[ss] = calculate_max_event_size(ss)
         fragment_ids[ss] = calculate_subsystem_fragment_ids(ss)
+
+    self.print_log("d", "Bookkeeping: recursive subsystem calculations took %.4f s" % (time.time() - _bk_section_start))
+    _bk_section_start = time.time()
 
     # If we have advanced memory usage switched on, then make sure the
     # max_event_size_bytes gets set to the value calculated here in
@@ -297,6 +310,9 @@ def bookkeeping_for_fhicl_documents_artdaq_v3_base(self):
                         self.procinfos[i_proc].fhicl_used,
                     )
 
+    self.print_log("d", "Bookkeeping: max_event_size_bytes substitution took %.4f s" % (time.time() - _bk_section_start))
+    _bk_section_start = time.time()
+
     # Check for places where Fragment IDs need to be filled in
 
     for i_proc in range(len(self.procinfos)):
@@ -319,6 +335,9 @@ def bookkeeping_for_fhicl_documents_artdaq_v3_base(self):
                     ),
                     self.procinfos[i_proc].fhicl_used,
                 )
+
+    self.print_log("d", "Bookkeeping: fragment IDs fill-in took %.4f s" % (time.time() - _bk_section_start))
+    _bk_section_start = time.time()
 
     # Construct the host map string needed in the sources and destinations
     # tables in artdaq process FHiCL
@@ -600,6 +619,9 @@ def bookkeeping_for_fhicl_documents_artdaq_v3_base(self):
                     )
                 )
 
+    self.print_log("d", "Bookkeeping: host map + sources/destinations setup took %.4f s" % (time.time() - _bk_section_start))
+    _bk_section_start = time.time()
+
     for i_proc in range(len(self.procinfos)):
 
         for tablename in ["sources", "destinations"]:
@@ -669,6 +691,9 @@ def bookkeeping_for_fhicl_documents_artdaq_v3_base(self):
                     self.procinfos[i_proc], tablename, searchstart
                 )
 
+    self.print_log("d", "Bookkeeping: sources/destinations table construction took %.4f s" % (time.time() - _bk_section_start))
+    _bk_section_start = time.time()
+
     nonsending_boardreaders = []
     for i_proc in range(len(self.procinfos)):
 
@@ -688,6 +713,9 @@ def bookkeeping_for_fhicl_documents_artdaq_v3_base(self):
                             procinfo.fhicl_used,
                         ):
                             nonsending_boardreaders.append(procinfo.label)
+
+    self.print_log("d", "Bookkeeping: nonsending boardreaders identification took %.4f s" % (time.time() - _bk_section_start))
+    _bk_section_start = time.time()
 
     for i_proc in range(len(self.procinfos)):
         if (
@@ -725,6 +753,9 @@ def bookkeeping_for_fhicl_documents_artdaq_v3_base(self):
             "partition_number: %d" % (self.partition_number),
             self.procinfos[i_proc].fhicl_used,
         )
+
+    self.print_log("d", "Bookkeeping: per-procinfo parameter updates took %.4f s" % (time.time() - _bk_section_start))
+    _bk_section_start = time.time()
 
     # JCF, Apr-17-2019
 
@@ -775,6 +806,9 @@ def bookkeeping_for_fhicl_documents_artdaq_v3_base(self):
 
         for procinfo in self.procinfos:
             private_networks_seen[procinfo.label] = host_networks[procinfo.host]
+
+    self.print_log("d", "Bookkeeping: private network discovery took %.4f s" % (time.time() - _bk_section_start))
+    _bk_section_start = time.time()
 
     assert (
         not self.disable_private_network_bookkeeping or len(private_networks_seen) == 0
@@ -1020,6 +1054,9 @@ def bookkeeping_for_fhicl_documents_artdaq_v3_base(self):
             + self.procinfos[i_proc].fhicl_used[table_end:]
         )
 
+    self.print_log("d", "Bookkeeping: subsystem routing/multicast bookkeeping took %.4f s" % (time.time() - _bk_section_start))
+    _bk_section_start = time.time()
+
     # Hoist invariant computation out of the per-process loop
     _routing_manager_subsystems = set(
         rm.subsystem
@@ -1115,6 +1152,9 @@ def bookkeeping_for_fhicl_documents_artdaq_v3_base(self):
                 bookkeep_table_for_router_process(
                     i_proc, di_subsystem, "routing_token_config", "Dispatcher"
                 )
+
+    self.print_log("d", "Bookkeeping: router process table bookkeeping took %.4f s" % (time.time() - _bk_section_start))
+    _bk_section_start = time.time()
 
     firstLoggerRank = 9999999
 
@@ -1297,6 +1337,9 @@ def bookkeeping_for_fhicl_documents_artdaq_v3_base(self):
                 "init_fragment_count: %d" % init_fragment_counts[procinfo.name],
                 procinfo.fhicl_used,
             )
+
+    self.print_log("d", "Bookkeeping: firstLoggerRank + data_dir + overwrites + init_fragment_count took %.4f s" % (time.time() - _bk_section_start))
+    self.print_log("d", "Bookkeeping: total time %.4f s" % (time.time() - _bk_start))
 
 
 def bookkeeping_for_fhicl_documents_artdaq_v4_base(self):
