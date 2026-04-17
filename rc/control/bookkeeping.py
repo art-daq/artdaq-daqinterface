@@ -368,6 +368,38 @@ def bookkeeping_for_fhicl_documents_artdaq_v3_base(self):
             pi.name == "DataLogger" for pi in self.procinfos if pi.subsystem == ss
         )
 
+    # Pre-group procinfos by (subsystem, process_type) for O(1) lookup
+    # instead of iterating all procinfos in create_sources_or_destinations_string
+    _process_type_keys = ["BoardReader", "EventBuilder", "DataLogger", "Dispatcher", "RoutingManager"]
+
+    def _get_type_key(name):
+        for tk in _process_type_keys:
+            if tk in name:
+                return tk
+        return name
+
+    _procinfos_by_ss_type = {}
+    for pi in procinfos_sorted_by_rank:
+        key = (pi.subsystem, _get_type_key(pi.name))
+        _procinfos_by_ss_type.setdefault(key, []).append(pi)
+
+    # Pre-compute inter-subsystem EventBuilder connections:
+    # For each subsystem, which other subsystems' EBs are sources/destinations
+    _inter_ss_eb_destinations = {}  # ss -> list of EBs in destination subsystem
+    _inter_ss_eb_sources = {}       # ss -> list of EBs in source subsystems
+    for ss in self.subsystems:
+        dest_ss = self.subsystems[ss].destination
+        if dest_ss:
+            _inter_ss_eb_destinations[ss] = _procinfos_by_ss_type.get((dest_ss, "EventBuilder"), [])
+        else:
+            _inter_ss_eb_destinations[ss] = []
+        # Sources: EBs from subsystems whose destination is ss
+        source_ebs = []
+        for other_ss in self.subsystems:
+            if self.subsystems[other_ss].destination == ss:
+                source_ebs.extend(_procinfos_by_ss_type.get((other_ss, "EventBuilder"), []))
+        _inter_ss_eb_sources[ss] = sorted(source_ebs, key=lambda p: p.rank)
+
     # This function will construct the sources or destinations table
     # for a given process.  If we're performing advanced memory usage,
     # the max event size will need to be provided; this value is used
@@ -416,81 +448,43 @@ def bookkeeping_for_fhicl_documents_artdaq_v3_base(self):
                 pass  # Same comment for the advanced memory usage case above applies here
 
         procinfo_subsystem_has_dataloggers = subsystem_has_dataloggers[procinfo.subsystem]
+        ss = procinfo.subsystem
+        proc_type = _get_type_key(procinfo.name)
 
+        # Use pre-grouped lookup tables to select only relevant processes
         procinfos_for_string = []
 
-        for procinfo_to_check in procinfos_sorted_by_rank:
-            add = False  # As in, "add this process we're checking to the sources or destinations
-            # table"
+        if not inter_subsystem_transfer:
+            if proc_type == "BoardReader" and nodetype == "destinations":
+                procinfos_for_string = list(_procinfos_by_ss_type.get((ss, "EventBuilder"), []))
+            elif proc_type == "EventBuilder":
+                if nodetype == "sources":
+                    procinfos_for_string = list(_procinfos_by_ss_type.get((ss, "BoardReader"), []))
+                elif nodetype == "destinations":
+                    procinfos_for_string = list(_procinfos_by_ss_type.get((ss, "DataLogger"), []))
+                    if not procinfo_subsystem_has_dataloggers:
+                        procinfos_for_string.extend(_procinfos_by_ss_type.get((ss, "Dispatcher"), []))
+                    procinfos_for_string.sort(key=lambda p: p.rank)
+            elif proc_type == "DataLogger":
+                if nodetype == "sources":
+                    procinfos_for_string = list(_procinfos_by_ss_type.get((ss, "EventBuilder"), []))
+                elif nodetype == "destinations":
+                    procinfos_for_string = list(_procinfos_by_ss_type.get((ss, "Dispatcher"), []))
+            elif proc_type == "Dispatcher":
+                if nodetype == "sources":
+                    procinfos_for_string = list(_procinfos_by_ss_type.get((ss, "DataLogger"), []))
+                    if not procinfo_subsystem_has_dataloggers:
+                        procinfos_for_string.extend(_procinfos_by_ss_type.get((ss, "EventBuilder"), []))
+                    procinfos_for_string.sort(key=lambda p: p.rank)
 
-            if (
-                procinfo_to_check.subsystem == procinfo.subsystem
-                and not inter_subsystem_transfer
-            ):
-                if "BoardReader" in procinfo.name:
-                    if (
-                        "EventBuilder" in procinfo_to_check.name
-                        and nodetype == "destinations"
-                    ):
-                        add = True
-                elif "EventBuilder" in procinfo.name:
-                    if (
-                        "BoardReader" in procinfo_to_check.name
-                        and nodetype == "sources"
-                    ):
-                        add = True
-                    elif (
-                        "DataLogger" in procinfo_to_check.name
-                        and nodetype == "destinations"
-                    ):
-                        add = True
-                    elif (
-                        not procinfo_subsystem_has_dataloggers
-                        and "Dispatcher" in procinfo_to_check.name
-                        and nodetype == "destinations"
-                    ):
-                        add = True
-                elif "DataLogger" in procinfo.name:
-                    if (
-                        "EventBuilder" in procinfo_to_check.name
-                        and nodetype == "sources"
-                    ):
-                        add = True
-                    elif (
-                        "Dispatcher" in procinfo_to_check.name
-                        and nodetype == "destinations"
-                    ):
-                        add = True
-                elif "Dispatcher" in procinfo.name:
-                    if "DataLogger" in procinfo_to_check.name and nodetype == "sources":
-                        add = True
-                    elif (
-                        not procinfo_subsystem_has_dataloggers
-                        and "EventBuilder" in procinfo_to_check.name
-                        and nodetype == "sources"
-                    ):
-                        add = True
-
-            if procinfo_to_check.subsystem != procinfo.subsystem and (
-                inter_subsystem_transfer or nodetype == "sources"
-            ):  # the two processes are in separate subsystems
-                if (
-                    "EventBuilder" in procinfo.name
-                    and "EventBuilder" in procinfo_to_check.name
-                ):
-                    if (
-                        nodetype == "destinations"
-                        and self.subsystems[procinfo.subsystem].destination
-                        == procinfo_to_check.subsystem
-                    ) or (
-                        nodetype == "sources"
-                        and self.subsystems[procinfo_to_check.subsystem].destination
-                        == procinfo.subsystem
-                    ):
-                        add = True
-
-            if add:
-                procinfos_for_string.append(procinfo_to_check)
+        # Inter-subsystem EventBuilder connections
+        if proc_type == "EventBuilder" and (inter_subsystem_transfer or nodetype == "sources"):
+            if nodetype == "destinations":
+                procinfos_for_string.extend(_inter_ss_eb_destinations.get(ss, []))
+            if nodetype == "sources":
+                procinfos_for_string.extend(_inter_ss_eb_sources.get(ss, []))
+            # Re-sort by rank to maintain original ordering
+            procinfos_for_string.sort(key=lambda p: p.rank)
 
         nodes = []
 
