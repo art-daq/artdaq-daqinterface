@@ -20,7 +20,7 @@ from rc.control.utilities import zero_out_last_subnet
 # ── Precompiled regex patterns (module-level, compiled once at import) ──
 
 _RE_MAX_FRAG_SIZE = re.compile(
-    r"\n[^\n#]*max_fragment_size_bytes\s*:\s*([0-9\.exabcdefABCDEF]+)")
+    r"\n[^\n#]*max_fragment_size_bytes\s*:\s*([0-9\.xabcdefABCDEF]+)")
 _RE_MAX_EVT_SIZE_SEARCH = re.compile(
     r"\n[^\n#]*max_event_size_bytes\s*:\s*[0-9\.e]+")
 _RE_MAX_EVT_SIZE_VALUE = re.compile(
