@@ -2424,7 +2424,7 @@ class DAQInterface(Component):
                 % (
                     date_and_time_more_precision(),
                     self.procinfos[procinfo_index].label,
-                    (endtime - starttime)
+                    (time_end - time_start)
                 ),
                 3,
             )
