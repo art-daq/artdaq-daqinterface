@@ -2297,6 +2297,7 @@ class DAQInterface(Component):
                 "RoutingManager": self.routingmanager_timeout,
             }
             timeout = timeout_dict[self.procinfos[procinfo_index].name]
+            time_start = time()
 
             self.procinfos[procinfo_index].state = self.verbing_to_states[command]
 
@@ -2415,6 +2416,17 @@ class DAQInterface(Component):
 
                 self.print_log("e", make_paragraph(output_message))
 
+            time_end = time()
+            self.print_log(
+                "d",
+                "%s: Done sending transition to %s, %.1f seconds elapsed"
+                % (
+                    date_and_time_more_precision(),
+                    self.procinfos[procinfo_index].label,
+                    (time_end - time_start),
+                ),
+                3,
+            )
             return  # From process_command
 
         # JCF, Nov-8-2015
