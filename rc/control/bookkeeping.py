@@ -176,6 +176,46 @@ def bookkeeping_for_fhicl_documents_artdaq_v3_base(self):
     # subsystems upstream whose eventbuilders send fragments down to
     # the subsystem in question
 
+    # Before any recursive traversal, check the subsystem graph for
+    # cycles, which would cause infinite recursion with an unhelpful
+    # "maximum recursion depth exceeded" error.
+
+    def find_cycle_in_subsystem_graph():
+        visited = set()
+        in_stack = set()
+
+        def dfs(ss):
+            visited.add(ss)
+            in_stack.add(ss)
+            for ss_source in self.subsystems[ss].sources:
+                if ss_source not in self.subsystems:
+                    continue
+                if ss_source not in visited:
+                    cycle_path = dfs(ss_source)
+                    if cycle_path is not None:
+                        return [ss] + cycle_path
+                elif ss_source in in_stack:
+                    return [ss, ss_source]
+            in_stack.discard(ss)
+            return None
+
+        for ss in self.subsystems:
+            if ss not in visited:
+                cycle_path = dfs(ss)
+                if cycle_path is not None:
+                    return cycle_path
+        return None
+
+    cycle = find_cycle_in_subsystem_graph()
+    if cycle is not None:
+        raise Exception(
+            make_paragraph(
+                "Circular dependency detected in the subsystem sources configuration: %s. "
+                "Each subsystem's 'sources' must form a directed acyclic graph (DAG). "
+                "Please check your subsystem settings and remove the circular reference."
+                % (" -> ".join(str(s) for s in cycle))
+            )
+        )
     # Memoization caches for the recursive helpers
     _frag_count_cache = {}
     _evt_size_cache = {}
@@ -644,6 +684,82 @@ def bookkeeping_for_fhicl_documents_artdaq_v3_base(self):
                     )
                 )
 
+    # Pre-flight validation: check that required FHiCL configuration parameters
+    # are present before attempting bookkeeping substitutions.  Bookkeeping
+    # uses re.sub to update these parameters in-place; if a required parameter
+    # is absent re.sub silently does nothing, leaving the process with
+    # incorrect or missing configuration.
+
+    for procinfo in self.procinfos:
+
+        if "RoutingManager" in procinfo.name:
+            continue
+
+        fhicl_with_leading_newline = "\n" + procinfo.fhicl_used
+
+        # EventBuilders must have expected_fragments_per_event so that
+        # bookkeeping can set the correct per-subsystem fragment count.
+        if "EventBuilder" in procinfo.name:
+            if not re.search(
+                r"\n[^#\n]*expected_fragments_per_event\s*:",
+                fhicl_with_leading_newline,
+            ):
+                raise Exception(
+                    make_paragraph(
+                        "Required FHiCL parameter 'expected_fragments_per_event' was not "
+                        "found in the configuration for %s (%s). DAQInterface sets this "
+                        "parameter during bookkeeping - please add "
+                        "'expected_fragments_per_event: 0' (or any placeholder value) to "
+                        "the FHiCL document." % (procinfo.label, procinfo.name)
+                    )
+                )
+
+        # DataLoggers and Dispatchers have expected_fragments_per_event set to
+        # 1 by bookkeeping when the parameter is present; warn if it is missing.
+        if "DataLogger" in procinfo.name or "Dispatcher" in procinfo.name:
+            if not re.search(
+                r"\n[^#\n]*expected_fragments_per_event\s*:",
+                fhicl_with_leading_newline,
+            ):
+                self.print_log(
+                    "w",
+                    make_paragraph(
+                        "FHiCL parameter 'expected_fragments_per_event' was not found in "
+                        "the configuration for %s (%s). DAQInterface sets this to 1 "
+                        "during bookkeeping when the parameter is present - consider "
+                        "adding 'expected_fragments_per_event: 0' to the FHiCL document."
+                        % (procinfo.label, procinfo.name)
+                    ),
+                )
+
+        # Non-BoardReader processes receive data and must have a 'sources'
+        # table placeholder so that bookkeeping can fill in the correct
+        # upstream connections.
+        if "BoardReader" not in procinfo.name:
+            (sources_start, _) = table_range(procinfo.fhicl_used, "sources")
+            if sources_start == -1:
+                raise Exception(
+                    make_paragraph(
+                        "Required FHiCL table 'sources' was not found in the "
+                        "configuration for %s (%s). DAQInterface fills in this table "
+                        "during bookkeeping - please add 'sources: {}' to the FHiCL "
+                        "document." % (procinfo.label, procinfo.name)
+                    )
+                )
+
+        # BoardReader processes must have a 'destinations' table placeholder
+        # so that bookkeeping can fill in the EventBuilders to send data to.
+        if "BoardReader" in procinfo.name:
+            (destinations_start, _) = table_range(procinfo.fhicl_used, "destinations")
+            if destinations_start == -1:
+                raise Exception(
+                    make_paragraph(
+                        "Required FHiCL table 'destinations' was not found in the "
+                        "configuration for %s (%s). DAQInterface fills in this table "
+                        "during bookkeeping - please add 'destinations: {}' to the "
+                        "FHiCL document." % (procinfo.label, procinfo.name)
+                    )
+                )
     self.print_log(
         "d",
         "Bookkeeping: host map + sources/destinations setup took %.4f s"
