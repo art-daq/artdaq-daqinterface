@@ -4,8 +4,9 @@ import sys
 
 sys.path.append(os.environ["ARTDAQ_DAQINTERFACE_DIR"])
 
-import string
 import re
+import time
+from concurrent.futures import ThreadPoolExecutor, as_completed
 
 from rc.control.utilities import table_range
 from rc.control.utilities import enclosing_table_range
@@ -16,8 +17,40 @@ from rc.control.utilities import fhicl_writes_root_file
 from rc.control.utilities import get_private_networks
 from rc.control.utilities import zero_out_last_subnet
 
+# ── Precompiled regex patterns (module-level, compiled once at import) ──
+
+_RE_MAX_FRAG_SIZE = re.compile(
+    r"\n[^\n#]*max_fragment_size_bytes\s*:\s*([0-9\.xabcdefABCDEF]+)"
+)
+_RE_MAX_EVT_SIZE_SEARCH = re.compile(r"\n[^\n#]*max_event_size_bytes\s*:\s*[0-9\.e]+")
+_RE_MAX_EVT_SIZE_VALUE = re.compile(r"\n\s*max_event_size_bytes\s*:\s*([0-9\.e]+)")
+_RE_MAX_EVT_SIZE_SUB = re.compile(r"max_event_size_bytes\s*:\s*[0-9\.e]+")
+_RE_BUFFER_COUNT = re.compile(r"\n(\s*buffer_count\s*:\s*[0-9]+)")
+_RE_FRAGMENT_ID = re.compile(r"\n\s*fragment_id\s*:\s*([0-9]+)")
+_RE_FRAGMENT_IDS = re.compile(r"\n\s*fragment_ids\s*:\s*\[\s*([0-9,\n ]+)\s*\]")
+_RE_FRAGMENT_IDS_SEARCH = re.compile(r"\n[^\n#]*fragment_ids\s*:\s*\[[0-9, ]*\]")
+_RE_FRAGMENT_IDS_SUB = re.compile(r"fragment_ids\s*:\s*\[[0-9, ]*\]")
+_RE_SENDS_NO_FRAGS = re.compile(r"\n\s*sends_no_fragments\s*:\s*[Tt]rue")
+_RE_GEN_FRAGS_ZERO = re.compile(r"\n\s*generated_fragments_per_event\s*:\s*0")
+_RE_EXPECTED_FRAGS = re.compile(r"expected_fragments_per_event\s*:\s*[0-9]+")
+_RE_HOST_MAP = re.compile(r"host_map\s*:\s*\[.*?\]")
+_RE_REQ_ADDR = re.compile(r'request_address\s*:\s*["0-9\.]+')
+_RE_PARTITION = re.compile(r"partition_number\s*:\s*[0-9]+")
+_RE_MULTICAST_IP = re.compile(r"multicast_interface_ip\s*:\s*\S+")
+_RE_TABLE_UPDATE_PORT = re.compile(r"table_update_port\s*:\s*[0-9]+")
+_RE_ROUTING_TOKEN_PORT = re.compile(r"routing_token_port\s*:\s*[0-9]+")
+_RE_ROUTING_MGR_HOST = re.compile(r"routing_manager_hostname\s*:\s*\S+")
+_RE_FIRST_LOGGER_RANK = re.compile(r"firstLoggerRank\s*:\s*\S+")
+_RE_ROOT_NET_OUTPUT = re.compile(r'module_type:\s*"RootNetOutput"')
+_RE_ART_ANALYZER_CNT = re.compile(r"\s*art_analyzer_count\s*:\s*([0-9\.e]+)")
+_RE_INIT_FRAG_COUNT = re.compile(r"init_fragment_count\s*:\s*\S+")
+_RE_SEND_REQUESTS = re.compile(r"\n\s*send_requests\s*:\s*true")
+
 
 def bookkeeping_for_fhicl_documents_artdaq_v3_base(self):
+
+    _bk_start = time.time()
+    _bk_section_start = _bk_start
 
     # Start calculating values (fragment counts, memory sizes, etc.)
     # which will need to appear in the FHiCL
@@ -26,16 +59,14 @@ def bookkeeping_for_fhicl_documents_artdaq_v3_base(self):
     # read in the max fragment size meant to be provided by each
     # boardreader FHiCL
 
-    if self.advanced_memory_usage:
+    # Build a label→fragment_size dict (O(1) lookup instead of linear scan)
+    max_fragment_size_by_label = {}
 
-        max_fragment_sizes = []
+    if self.advanced_memory_usage:
 
         for procinfo in self.procinfos:
 
-            res = re.findall(
-                r"\n[^#]*max_fragment_size_bytes\s*:\s*([0-9\.exabcdefABCDEF]+)",
-                procinfo.fhicl_used,
-            )
+            res = _RE_MAX_FRAG_SIZE.findall(procinfo.fhicl_used)
 
             if "BoardReader" in procinfo.name:
                 if len(res) > 0:
@@ -46,7 +77,7 @@ def bookkeeping_for_fhicl_documents_artdaq_v3_base(self):
                     else:
                         max_fragment_size = int(max_fragment_size_token[2:], 16)
 
-                    max_fragment_sizes.append((procinfo.label, max_fragment_size))
+                    max_fragment_size_by_label[procinfo.label] = max_fragment_size
                 else:
                     raise Exception(
                         make_paragraph(
@@ -71,6 +102,14 @@ def bookkeeping_for_fhicl_documents_artdaq_v3_base(self):
                     )
                 )
 
+    self.print_log(
+        "d",
+        "Bookkeeping: max_fragment_size extraction took %.4f s"
+        % (time.time() - _bk_section_start),
+        debuglevel=3,
+    )
+    _bk_section_start = time.time()
+
     # Now loop over the boardreaders again to determine
     # subsystem-level things, such as the number of fragments per
     # event produced by each subsystem's boardreader set, and the
@@ -89,19 +128,13 @@ def bookkeeping_for_fhicl_documents_artdaq_v3_base(self):
             generated_fragments_per_event = 1
             reader_ids = []
 
-            res = re.search(
-                r"\n\s*fragment_id\s*:\s*([0-9]+)",
-                procinfo.fhicl_used,
-            )
+            res = _RE_FRAGMENT_ID.search(procinfo.fhicl_used)
 
             if res:
                 generated_fragments_per_event = 1
                 reader_ids.append(int(res.group(1)))
 
-            res = re.search(
-                r"\n\s*fragment_ids\s*:\s*\[\s*([0-9,\n ]+)\s*\]",
-                procinfo.fhicl_used,
-            )
+            res = _RE_FRAGMENT_IDS.search(procinfo.fhicl_used)
 
             if res:
                 ids = res.group(1).split(",")
@@ -117,18 +150,12 @@ def bookkeeping_for_fhicl_documents_artdaq_v3_base(self):
             # ELF, 11-Sep-2023: Putting "sends_no_fragments: true" check here,
             # so you can override the count from fragment_id and/or fragment_ids (e.g. Mu2e)
 
-            if re.search(r"\n\s*sends_no_fragments\s*:\s*[Tt]rue", procinfo.fhicl_used):
+            if _RE_SENDS_NO_FRAGS.search(procinfo.fhicl_used):
                 generated_fragments_per_event = 0
                 reader_ids = []
 
             if self.advanced_memory_usage:
-                list_of_one_fragment_size = [
-                    proctuple[1]
-                    for proctuple in max_fragment_sizes
-                    if proctuple[0] == procinfo.label
-                ]
-                assert len(list_of_one_fragment_size) == 1
-                fragment_space = list_of_one_fragment_size[0]
+                fragment_space = max_fragment_size_by_label[procinfo.label]
             else:
                 fragment_space = self.max_fragment_size_bytes
 
@@ -189,8 +216,15 @@ def bookkeeping_for_fhicl_documents_artdaq_v3_base(self):
                 % (" -> ".join(str(s) for s in cycle))
             )
         )
+    # Memoization caches for the recursive helpers
+    _frag_count_cache = {}
+    _evt_size_cache = {}
+    _frag_ids_cache = {}
 
     def calculate_expected_fragments_per_event(ss):
+        if ss in _frag_count_cache:
+            return _frag_count_cache[ss]
+
         count = len(subsystem_fragment_ids[ss])
 
         for ss_source in self.subsystems[ss].sources:
@@ -203,9 +237,13 @@ def bookkeeping_for_fhicl_documents_artdaq_v3_base(self):
             else:
                 count += 1
 
+        _frag_count_cache[ss] = count
         return count
 
     def calculate_max_event_size(ss):
+        if ss in _evt_size_cache:
+            return _evt_size_cache[ss]
+
         size = subsystem_fragment_space[ss]
 
         if self.advanced_memory_usage:
@@ -223,10 +261,14 @@ def bookkeeping_for_fhicl_documents_artdaq_v3_base(self):
         if size < 1024000:
             size = 1024000
 
+        _evt_size_cache[ss] = size
         return size
 
     def calculate_subsystem_fragment_ids(ss):
-        ids = subsystem_fragment_ids[ss]
+        if ss in _frag_ids_cache:
+            return _frag_ids_cache[ss]
+
+        ids = subsystem_fragment_ids[ss][:]
 
         for ss_source in self.subsystems[ss].sources:
             if self.subsystems[ss_source].fragmentMode:
@@ -234,19 +276,31 @@ def bookkeeping_for_fhicl_documents_artdaq_v3_base(self):
             else:
                 ids += [ss_source]
 
+        _frag_ids_cache[ss] = ids
         return ids
 
+    self.print_log(
+        "d",
+        "Bookkeeping: boardreader fragment counting took %.4f s"
+        % (time.time() - _bk_section_start),
+    )
+    _bk_section_start = time.time()
+
     expected_fragments_per_event = {}
+    max_event_sizes = {}
+    fragment_ids = {}
+
     for ss in self.subsystems:
         expected_fragments_per_event[ss] = calculate_expected_fragments_per_event(ss)
-
-    max_event_sizes = {}
-    for ss in self.subsystems:
         max_event_sizes[ss] = calculate_max_event_size(ss)
-
-    fragment_ids = {}
-    for ss in self.subsystems:
         fragment_ids[ss] = calculate_subsystem_fragment_ids(ss)
+
+    self.print_log(
+        "d",
+        "Bookkeeping: recursive subsystem calculations took %.4f s"
+        % (time.time() - _bk_section_start),
+    )
+    _bk_section_start = time.time()
 
     # If we have advanced memory usage switched on, then make sure the
     # max_event_size_bytes gets set to the value calculated here in
@@ -259,20 +313,17 @@ def bookkeeping_for_fhicl_documents_artdaq_v3_base(self):
                 "BoardReader" not in self.procinfos[i_proc].name
                 and "RoutingManager" not in self.procinfos[i_proc].name
             ):
-                if re.search(
-                    r"\n[^#]*max_event_size_bytes\s*:\s*[0-9\.e]+",
+                if _RE_MAX_EVT_SIZE_SEARCH.search(
                     self.procinfos[i_proc].fhicl_used,
                 ):
-                    self.procinfos[i_proc].fhicl_used = re.sub(
-                        "max_event_size_bytes\s*:\s*[0-9\.e]+",
+                    self.procinfos[i_proc].fhicl_used = _RE_MAX_EVT_SIZE_SUB.sub(
                         "max_event_size_bytes: %d"
                         % (max_event_sizes[self.procinfos[i_proc].subsystem]),
                         self.procinfos[i_proc].fhicl_used,
                     )
                 else:
 
-                    res = re.search(
-                        r"\n(\s*buffer_count\s*:\s*[0-9]+)",
+                    res = _RE_BUFFER_COUNT.search(
                         self.procinfos[i_proc].fhicl_used,
                     )
 
@@ -281,8 +332,7 @@ def bookkeeping_for_fhicl_documents_artdaq_v3_base(self):
                         % (self.procinfos[i_proc].label)
                     )
 
-                    self.procinfos[i_proc].fhicl_used = re.sub(
-                        r"\n(\s*buffer_count\s*:\s*[0-9]+)",
+                    self.procinfos[i_proc].fhicl_used = _RE_BUFFER_COUNT.sub(
                         "\n%s\nmax_event_size_bytes: %d"
                         % (
                             res.group(1),
@@ -291,6 +341,13 @@ def bookkeeping_for_fhicl_documents_artdaq_v3_base(self):
                         self.procinfos[i_proc].fhicl_used,
                     )
 
+    self.print_log(
+        "d",
+        "Bookkeeping: max_event_size_bytes substitution took %.4f s"
+        % (time.time() - _bk_section_start),
+    )
+    _bk_section_start = time.time()
+
     # Check for places where Fragment IDs need to be filled in
 
     for i_proc in range(len(self.procinfos)):
@@ -298,12 +355,10 @@ def bookkeeping_for_fhicl_documents_artdaq_v3_base(self):
             "BoardReader" not in self.procinfos[i_proc].name
             and "RoutingManager" not in self.procinfos[i_proc].name
         ):
-            if re.search(
-                r"\n[^#]*fragment_ids\s*:\s*\[[0-9, ]*\]",
+            if _RE_FRAGMENT_IDS_SEARCH.search(
                 self.procinfos[i_proc].fhicl_used,
             ):
-                self.procinfos[i_proc].fhicl_used = re.sub(
-                    "fragment_ids\s*:\s*\[[0-9, ]*\]",
+                self.procinfos[i_proc].fhicl_used = _RE_FRAGMENT_IDS_SUB.sub(
                     "fragment_ids: [ %s ]"
                     % (
                         ", ".join(
@@ -315,6 +370,13 @@ def bookkeeping_for_fhicl_documents_artdaq_v3_base(self):
                     ),
                     self.procinfos[i_proc].fhicl_used,
                 )
+
+    self.print_log(
+        "d",
+        "Bookkeeping: fragment IDs fill-in took %.4f s"
+        % (time.time() - _bk_section_start),
+    )
+    _bk_section_start = time.time()
 
     # Construct the host map string needed in the sources and destinations
     # tables in artdaq process FHiCL
@@ -337,6 +399,55 @@ def bookkeeping_for_fhicl_documents_artdaq_v3_base(self):
         proc_hosts.append('{rank: %d host: "%s"}' % (procinfo.rank, host_to_display))
 
     host_map_string = "host_map: [%s]" % (", ".join(proc_hosts))
+
+    # Pre-build subsystem→has_dataloggers lookup (avoids repeated list comprehension)
+    subsystem_has_dataloggers = {}
+    for ss in self.subsystems:
+        subsystem_has_dataloggers[ss] = any(
+            pi.name == "DataLogger" for pi in self.procinfos if pi.subsystem == ss
+        )
+
+    # Pre-group procinfos by (subsystem, process_type) for O(1) lookup
+    # instead of iterating all procinfos in create_sources_or_destinations_string
+    _process_type_keys = [
+        "BoardReader",
+        "EventBuilder",
+        "DataLogger",
+        "Dispatcher",
+        "RoutingManager",
+    ]
+
+    def _get_type_key(name):
+        for tk in _process_type_keys:
+            if tk in name:
+                return tk
+        return name
+
+    _procinfos_by_ss_type = {}
+    for pi in procinfos_sorted_by_rank:
+        key = (pi.subsystem, _get_type_key(pi.name))
+        _procinfos_by_ss_type.setdefault(key, []).append(pi)
+
+    # Pre-compute inter-subsystem EventBuilder connections:
+    # For each subsystem, which other subsystems' EBs are sources/destinations
+    _inter_ss_eb_destinations = {}  # ss -> list of EBs in destination subsystem
+    _inter_ss_eb_sources = {}  # ss -> list of EBs in source subsystems
+    for ss in self.subsystems:
+        dest_ss = self.subsystems[ss].destination
+        if dest_ss:
+            _inter_ss_eb_destinations[ss] = _procinfos_by_ss_type.get(
+                (dest_ss, "EventBuilder"), []
+            )
+        else:
+            _inter_ss_eb_destinations[ss] = []
+        # Sources: EBs from subsystems whose destination is ss
+        source_ebs = []
+        for other_ss in self.subsystems:
+            if self.subsystems[other_ss].destination == ss:
+                source_ebs.extend(
+                    _procinfos_by_ss_type.get((other_ss, "EventBuilder"), [])
+                )
+        _inter_ss_eb_sources[ss] = sorted(source_ebs, key=lambda p: p.rank)
 
     # This function will construct the sources or destinations table
     # for a given process.  If we're performing advanced memory usage,
@@ -364,14 +475,7 @@ def bookkeeping_for_fhicl_documents_artdaq_v3_base(self):
 
             if "BoardReader" in procinfo.name:
 
-                list_of_one_fragment_size = [
-                    proctuple[1]
-                    for proctuple in max_fragment_sizes
-                    if proctuple[0] == procinfo.label
-                ]
-                assert len(list_of_one_fragment_size) == 1
-
-                buffer_size_words = list_of_one_fragment_size[0] / 8
+                buffer_size_words = max_fragment_size_by_label[procinfo.label] / 8
 
             elif "EventBuilder" not in procinfo.name or nodetype != "sources":
                 buffer_size_words = max_event_size / 8
@@ -384,9 +488,7 @@ def bookkeeping_for_fhicl_documents_artdaq_v3_base(self):
             if "BoardReader" in procinfo.name:
                 buffer_size_words = self.max_fragment_size_bytes / 8
             elif "EventBuilder" not in procinfo.name or nodetype != "sources":
-                res = re.search(
-                    r"\n\s*max_event_size_bytes\s*:\s*([0-9\.e]+)", procinfo.fhicl_used
-                )
+                res = _RE_MAX_EVT_SIZE_VALUE.search(procinfo.fhicl_used)
                 if res:
                     max_event_size = int(float(res.group(1)))
 
@@ -394,93 +496,64 @@ def bookkeeping_for_fhicl_documents_artdaq_v3_base(self):
             else:
                 pass  # Same comment for the advanced memory usage case above applies here
 
-        procinfo_subsystem_has_dataloggers = True
-        if (
-            len(
-                [
-                    pi
-                    for pi in self.procinfos
-                    if pi.subsystem == procinfo.subsystem and pi.name == "DataLogger"
-                ]
-            )
-            == 0
-        ):
-            procinfo_subsystem_has_dataloggers = False
+        procinfo_subsystem_has_dataloggers = subsystem_has_dataloggers[
+            procinfo.subsystem
+        ]
+        ss = procinfo.subsystem
+        proc_type = _get_type_key(procinfo.name)
 
+        # Use pre-grouped lookup tables to select only relevant processes
         procinfos_for_string = []
 
-        for procinfo_to_check in procinfos_sorted_by_rank:
-            add = False  # As in, "add this process we're checking to the sources or destinations
-            # table"
+        if not inter_subsystem_transfer:
+            if proc_type == "BoardReader" and nodetype == "destinations":
+                procinfos_for_string = list(
+                    _procinfos_by_ss_type.get((ss, "EventBuilder"), [])
+                )
+            elif proc_type == "EventBuilder":
+                if nodetype == "sources":
+                    procinfos_for_string = list(
+                        _procinfos_by_ss_type.get((ss, "BoardReader"), [])
+                    )
+                elif nodetype == "destinations":
+                    procinfos_for_string = list(
+                        _procinfos_by_ss_type.get((ss, "DataLogger"), [])
+                    )
+                    if not procinfo_subsystem_has_dataloggers:
+                        procinfos_for_string.extend(
+                            _procinfos_by_ss_type.get((ss, "Dispatcher"), [])
+                        )
+                    procinfos_for_string.sort(key=lambda p: p.rank)
+            elif proc_type == "DataLogger":
+                if nodetype == "sources":
+                    procinfos_for_string = list(
+                        _procinfos_by_ss_type.get((ss, "EventBuilder"), [])
+                    )
+                elif nodetype == "destinations":
+                    procinfos_for_string = list(
+                        _procinfos_by_ss_type.get((ss, "Dispatcher"), [])
+                    )
+            elif proc_type == "Dispatcher":
+                if nodetype == "sources":
+                    procinfos_for_string = list(
+                        _procinfos_by_ss_type.get((ss, "DataLogger"), [])
+                    )
+                    if not procinfo_subsystem_has_dataloggers:
+                        procinfos_for_string.extend(
+                            _procinfos_by_ss_type.get((ss, "EventBuilder"), [])
+                        )
+                    procinfos_for_string.sort(key=lambda p: p.rank)
 
-            if (
-                procinfo_to_check.subsystem == procinfo.subsystem
-                and not inter_subsystem_transfer
-            ):
-                if "BoardReader" in procinfo.name:
-                    if (
-                        "EventBuilder" in procinfo_to_check.name
-                        and nodetype == "destinations"
-                    ):
-                        add = True
-                elif "EventBuilder" in procinfo.name:
-                    if (
-                        "BoardReader" in procinfo_to_check.name
-                        and nodetype == "sources"
-                    ):
-                        add = True
-                    elif (
-                        "DataLogger" in procinfo_to_check.name
-                        and nodetype == "destinations"
-                    ):
-                        add = True
-                    elif (
-                        not procinfo_subsystem_has_dataloggers
-                        and "Dispatcher" in procinfo_to_check.name
-                        and nodetype == "destinations"
-                    ):
-                        add = True
-                elif "DataLogger" in procinfo.name:
-                    if (
-                        "EventBuilder" in procinfo_to_check.name
-                        and nodetype == "sources"
-                    ):
-                        add = True
-                    elif (
-                        "Dispatcher" in procinfo_to_check.name
-                        and nodetype == "destinations"
-                    ):
-                        add = True
-                elif "Dispatcher" in procinfo.name:
-                    if "DataLogger" in procinfo_to_check.name and nodetype == "sources":
-                        add = True
-                    elif (
-                        not procinfo_subsystem_has_dataloggers
-                        and "EventBuilder" in procinfo_to_check.name
-                        and nodetype == "sources"
-                    ):
-                        add = True
-
-            if procinfo_to_check.subsystem != procinfo.subsystem and (
-                inter_subsystem_transfer or nodetype == "sources"
-            ):  # the two processes are in separate subsystems
-                if (
-                    "EventBuilder" in procinfo.name
-                    and "EventBuilder" in procinfo_to_check.name
-                ):
-                    if (
-                        nodetype == "destinations"
-                        and self.subsystems[procinfo.subsystem].destination
-                        == procinfo_to_check.subsystem
-                    ) or (
-                        nodetype == "sources"
-                        and self.subsystems[procinfo_to_check.subsystem].destination
-                        == procinfo.subsystem
-                    ):
-                        add = True
-
-            if add:
-                procinfos_for_string.append(procinfo_to_check)
+        # Inter-subsystem EventBuilder connections
+        if proc_type == "EventBuilder" and (
+            inter_subsystem_transfer or nodetype == "sources"
+        ):
+            if nodetype == "destinations":
+                procinfos_for_string.extend(_inter_ss_eb_destinations.get(ss, []))
+            if nodetype == "sources":
+                procinfos_for_string.extend(_inter_ss_eb_sources.get(ss, []))
+            # Re-sort by rank to maintain original ordering
+            procinfos_for_string.sort(key=lambda p: p.rank)
 
         nodes = []
 
@@ -513,13 +586,9 @@ def bookkeeping_for_fhicl_documents_artdaq_v3_base(self):
             if nodetype == "sources" and "EventBuilder" in procinfo.name:
                 if procinfo_for_string.name == "BoardReader":
                     if self.advanced_memory_usage:
-                        list_of_one_fragment_size = [
-                            proctuple[1]
-                            for proctuple in max_fragment_sizes
-                            if proctuple[0] == procinfo_for_string.label
-                        ]
-                        assert len(list_of_one_fragment_size) == 1
-                        buffer_size_words = list_of_one_fragment_size[0] / 8
+                        buffer_size_words = (
+                            max_fragment_size_by_label[procinfo_for_string.label] / 8
+                        )
                     else:
                         buffer_size_words = self.max_fragment_size_bytes / 8
                 elif procinfo_for_string.name == "EventBuilder":
@@ -696,6 +765,12 @@ def bookkeeping_for_fhicl_documents_artdaq_v3_base(self):
                         % (procinfo.label, procinfo.name)
                     )
                 )
+    self.print_log(
+        "d",
+        "Bookkeeping: host map + sources/destinations setup took %.4f s"
+        % (time.time() - _bk_section_start),
+    )
+    _bk_section_start = time.time()
 
     for i_proc in range(len(self.procinfos)):
 
@@ -766,6 +841,13 @@ def bookkeeping_for_fhicl_documents_artdaq_v3_base(self):
                     self.procinfos[i_proc], tablename, searchstart
                 )
 
+    self.print_log(
+        "d",
+        "Bookkeeping: sources/destinations table construction took %.4f s"
+        % (time.time() - _bk_section_start),
+    )
+    _bk_section_start = time.time()
+
     nonsending_boardreaders = []
     for i_proc in range(len(self.procinfos)):
 
@@ -779,28 +861,31 @@ def bookkeeping_for_fhicl_documents_artdaq_v3_base(self):
             if router_process_target == "EventBuilder":
                 for procinfo in self.procinfos:
                     if "BoardReader" in procinfo.name:
-                        if re.search(
-                            r"\n\s*sends_no_fragments\s*:\s*[Tt]rue",
+                        if _RE_SENDS_NO_FRAGS.search(
                             procinfo.fhicl_used,
-                        ) or re.search(
-                            r"\n\s*generated_fragments_per_event\s*:\s*0",
+                        ) or _RE_GEN_FRAGS_ZERO.search(
                             procinfo.fhicl_used,
                         ):
                             nonsending_boardreaders.append(procinfo.label)
+
+    self.print_log(
+        "d",
+        "Bookkeeping: nonsending boardreaders identification took %.4f s"
+        % (time.time() - _bk_section_start),
+    )
+    _bk_section_start = time.time()
 
     for i_proc in range(len(self.procinfos)):
         if (
             "DataLogger" in self.procinfos[i_proc].name
             or "Dispatcher" in self.procinfos[i_proc].name
         ):
-            self.procinfos[i_proc].fhicl_used = re.sub(
-                "expected_fragments_per_event\s*:\s*[0-9]+",
+            self.procinfos[i_proc].fhicl_used = _RE_EXPECTED_FRAGS.sub(
                 "expected_fragments_per_event: 1",
                 self.procinfos[i_proc].fhicl_used,
             )
         else:
-            self.procinfos[i_proc].fhicl_used = re.sub(
-                "expected_fragments_per_event\s*:\s*[0-9]+",
+            self.procinfos[i_proc].fhicl_used = _RE_EXPECTED_FRAGS.sub(
                 "expected_fragments_per_event: %d"
                 % (expected_fragments_per_event[self.procinfos[i_proc].subsystem]),
                 self.procinfos[i_proc].fhicl_used,
@@ -813,21 +898,26 @@ def bookkeeping_for_fhicl_documents_artdaq_v3_base(self):
         else:
             request_address = self.request_address
 
-        self.procinfos[i_proc].fhicl_used = re.sub(
-            "host_map\s*:\s*\[.*?\]", host_map_string, self.procinfos[i_proc].fhicl_used
+        self.procinfos[i_proc].fhicl_used = _RE_HOST_MAP.sub(
+            host_map_string, self.procinfos[i_proc].fhicl_used
         )
 
-        self.procinfos[i_proc].fhicl_used = re.sub(
-            'request_address\s*:\s*["0-9\.]+',
+        self.procinfos[i_proc].fhicl_used = _RE_REQ_ADDR.sub(
             'request_address: "%s"' % (request_address.strip('"')),
             self.procinfos[i_proc].fhicl_used,
         )
 
-        self.procinfos[i_proc].fhicl_used = re.sub(
-            "partition_number\s*:\s*[0-9]+",
+        self.procinfos[i_proc].fhicl_used = _RE_PARTITION.sub(
             "partition_number: %d" % (self.partition_number),
             self.procinfos[i_proc].fhicl_used,
         )
+
+    self.print_log(
+        "d",
+        "Bookkeeping: per-procinfo parameter updates took %.4f s"
+        % (time.time() - _bk_section_start),
+    )
+    _bk_section_start = time.time()
 
     # JCF, Apr-17-2019
 
@@ -859,11 +949,32 @@ def bookkeeping_for_fhicl_documents_artdaq_v3_base(self):
 
     private_networks_seen = {}
     if not self.disable_private_network_bookkeeping:
-        for host in set([procinfo.host for procinfo in self.procinfos]):
-            private_networks = get_private_networks(host)
-            for procinfo in self.procinfos:
-                if procinfo.host == host:
-                    private_networks_seen[procinfo.label] = private_networks
+        unique_hosts = list(set(procinfo.host for procinfo in self.procinfos))
+
+        # Parallelize network discovery – this is real I/O, threads help here
+        host_networks = {}
+        if len(unique_hosts) > 1:
+            with ThreadPoolExecutor(max_workers=min(8, len(unique_hosts))) as executor:
+                future_to_host = {
+                    executor.submit(get_private_networks, host): host
+                    for host in unique_hosts
+                }
+                for future in as_completed(future_to_host):
+                    host = future_to_host[future]
+                    host_networks[host] = future.result()
+        else:
+            for host in unique_hosts:
+                host_networks[host] = get_private_networks(host)
+
+        for procinfo in self.procinfos:
+            private_networks_seen[procinfo.label] = host_networks[procinfo.host]
+
+    self.print_log(
+        "d",
+        "Bookkeeping: private network discovery took %.4f s"
+        % (time.time() - _bk_section_start),
+    )
+    _bk_section_start = time.time()
 
     assert (
         not self.disable_private_network_bookkeeping or len(private_networks_seen) == 0
@@ -947,11 +1058,12 @@ def bookkeeping_for_fhicl_documents_artdaq_v3_base(self):
             boardreaders_involved_in_requests = []
             eventbuilders_involved_in_requests = []
 
-            for procinfo in [
+            subsystem_procinfos = [
                 procinfo
                 for procinfo in self.procinfos
                 if procinfo.subsystem == subsystem_id
-            ]:
+            ]
+            for procinfo in subsystem_procinfos:
                 if (
                     "BoardReader" in procinfo.name
                     and procinfo.label not in nonsending_boardreaders
@@ -966,10 +1078,7 @@ def bookkeeping_for_fhicl_documents_artdaq_v3_base(self):
                             break
 
                 if "EventBuilder" in procinfo.name:
-                    res = re.search(
-                        r"\n\s*send_requests\s*:\s*true", procinfo.fhicl_used
-                    )
-                    if res:
+                    if _RE_SEND_REQUESTS.search(procinfo.fhicl_used):
                         eventbuilders_involved_in_requests.append(procinfo.label)
 
             processes_involved_in_requests = [
@@ -1013,18 +1122,18 @@ def bookkeeping_for_fhicl_documents_artdaq_v3_base(self):
                     multicast_interface_ip = list(
                         private_networks_seen_by_processes_involved_in_requests
                     )[0]
+                    # Build label→index map for O(1) lookup instead of O(n) inner loop
+                    label_to_index = {
+                        self.procinfos[i].label: i for i in range(len(self.procinfos))
+                    }
                     for process_involved_in_request in processes_involved_in_requests:
-                        for i_proc in range(len(self.procinfos)):
-                            if (
-                                self.procinfos[i_proc].label
-                                == process_involved_in_request
-                            ):
-                                self.procinfos[i_proc].fhicl_used = re.sub(
-                                    "multicast_interface_ip\s*:\s*\S+",
-                                    'multicast_interface_ip: "%s"'
-                                    % (multicast_interface_ip),
-                                    self.procinfos[i_proc].fhicl_used,
-                                )
+                        i_proc = label_to_index.get(process_involved_in_request)
+                        if i_proc is not None:
+                            self.procinfos[i_proc].fhicl_used = _RE_MULTICAST_IP.sub(
+                                'multicast_interface_ip: "%s"'
+                                % (multicast_interface_ip),
+                                self.procinfos[i_proc].fhicl_used,
+                            )
                 else:
                     self.print_log(
                         "w",
@@ -1077,14 +1186,12 @@ def bookkeeping_for_fhicl_documents_artdaq_v3_base(self):
 
         table_to_bookkeep = self.procinfos[i_proc].fhicl_used[table_start:table_end]
 
-        table_to_bookkeep = re.sub(
-            "table_update_port\s*:\s*[0-9]+",
+        table_to_bookkeep = _RE_TABLE_UPDATE_PORT.sub(
             "table_update_port: %d"
             % (routing_base_ports[(router_process_subsystem, target)] + router_id),
             table_to_bookkeep,
         )
-        table_to_bookkeep = re.sub(
-            "routing_token_port\s*:\s*[0-9]+",
+        table_to_bookkeep = _RE_ROUTING_TOKEN_PORT.sub(
             "routing_token_port: %d"
             % (routing_base_ports[(router_process_subsystem, target)]),
             table_to_bookkeep,
@@ -1094,8 +1201,7 @@ def bookkeeping_for_fhicl_documents_artdaq_v3_base(self):
             "RoutingManager" not in self.procinfos[i_proc].name
             or not self.disable_private_network_bookkeeping
         ):
-            table_to_bookkeep = re.sub(
-                "routing_manager_hostname\s*:\s*\S+",
+            table_to_bookkeep = _RE_ROUTING_MGR_HOST.sub(
                 'routing_manager_hostname: "%s"'
                 % (
                     router_process_hostnames[(router_process_subsystem, target)].strip(
@@ -1112,6 +1218,25 @@ def bookkeeping_for_fhicl_documents_artdaq_v3_base(self):
             + "\n"
             + self.procinfos[i_proc].fhicl_used[table_end:]
         )
+
+    self.print_log(
+        "d",
+        "Bookkeeping: subsystem routing/multicast bookkeeping took %.4f s"
+        % (time.time() - _bk_section_start),
+    )
+    _bk_section_start = time.time()
+
+    # Hoist invariant computation out of the per-process loop
+    _routing_manager_subsystems = set(
+        rm.subsystem
+        for rm in self.procinfos
+        if get_router_process_identifier(rm) == "RoutingManager"
+    )
+    _parents_of_subsystems_with_routing_managers = set(
+        subsystem_id
+        for ss_id in _routing_manager_subsystems
+        for subsystem_id in self.subsystems[ss_id].sources
+    )
 
     for i_proc in range(len(self.procinfos)):
 
@@ -1139,11 +1264,9 @@ def bookkeeping_for_fhicl_documents_artdaq_v3_base(self):
             ) not in router_process_hostnames:
                 continue
 
-            if not re.search(
-                r"\n\s*sends_no_fragments\s*:\s*[Tt]rue",
+            if not _RE_SENDS_NO_FRAGS.search(
                 self.procinfos[i_proc].fhicl_used,
-            ) and not re.search(
-                r"\n\s*generated_fragments_per_event\s*:\s*0",
+            ) and not _RE_GEN_FRAGS_ZERO.search(
                 self.procinfos[i_proc].fhicl_used,
             ):
                 bookkeep_table_for_router_process(
@@ -1173,23 +1296,7 @@ def bookkeeping_for_fhicl_documents_artdaq_v3_base(self):
                     i_proc, eb_subsystem, "routing_table_config", "Dispatcher"
                 )
 
-            unflattened_parents_of_subsystems_with_routing_managers = [
-                self.subsystems[subsystem_id].sources
-                for subsystem_id in self.subsystems
-                if subsystem_id
-                in [
-                    rm.subsystem
-                    for rm in self.procinfos
-                    if get_router_process_identifier(rm) == "RoutingManager"
-                ]
-            ]
-            parents_of_subsystems_with_routing_managers = [
-                subsystem_id
-                for parents in unflattened_parents_of_subsystems_with_routing_managers
-                for subsystem_id in parents
-            ]
-
-            if eb_subsystem in parents_of_subsystems_with_routing_managers:
+            if eb_subsystem in _parents_of_subsystems_with_routing_managers:
                 bookkeep_table_for_router_process(
                     i_proc,
                     self.subsystems[eb_subsystem].destination,
@@ -1215,6 +1322,13 @@ def bookkeeping_for_fhicl_documents_artdaq_v3_base(self):
                     i_proc, di_subsystem, "routing_token_config", "Dispatcher"
                 )
 
+    self.print_log(
+        "d",
+        "Bookkeeping: router process table bookkeeping took %.4f s"
+        % (time.time() - _bk_section_start),
+    )
+    _bk_section_start = time.time()
+
     firstLoggerRank = 9999999
 
     for procinfo in self.procinfos:
@@ -1224,17 +1338,14 @@ def bookkeeping_for_fhicl_documents_artdaq_v3_base(self):
 
     for i_proc in range(len(self.procinfos)):
         if fhicl_writes_root_file(self.procinfos[i_proc].fhicl_used):
-            res = re.search(
-                r"firstLoggerRank\s*:\s*\S+", self.procinfos[i_proc].fhicl_used
-            )
-            if res:
-                self.procinfos[i_proc].fhicl_used = re.sub(
-                    "firstLoggerRank\s*:\s*\S+",
+            if _RE_FIRST_LOGGER_RANK.search(self.procinfos[i_proc].fhicl_used):
+                self.procinfos[i_proc].fhicl_used = _RE_FIRST_LOGGER_RANK.sub(
                     "firstLoggerRank: %d" % (firstLoggerRank),
                     self.procinfos[i_proc].fhicl_used,
                 )
 
     if not self.data_directory_override is None:
+        _re_filename = re.compile(r"(.*fileName\s*:[\s\"]*)/[^\s]+/")
         for i_proc in range(len(self.procinfos)):
             if (
                 "EventBuilder" in self.procinfos[i_proc].name
@@ -1264,8 +1375,7 @@ def bookkeeping_for_fhicl_documents_artdaq_v3_base(self):
                     # in the rootoutput_table, and avoid picking up earlier
                     # fileName
                     # parameter strings in the document.
-                    rootoutput_table = re.sub(
-                        r"(.*fileName\s*:[\s\"]*)/[^\s]+/",
+                    rootoutput_table = _re_filename.sub(
                         r"\1" + self.data_directory_override,
                         rootoutput_table,
                     )
@@ -1278,10 +1388,11 @@ def bookkeeping_for_fhicl_documents_artdaq_v3_base(self):
 
     for fhicl_key, fhicl_value in self.bootfile_fhicl_overwrites.items():
         print(fhicl_key, fhicl_value)
+        key_pattern = re.compile(r"%s\s*:\s*\S+" % (re.escape(fhicl_key)))
+        replacement = "%s: %s" % (fhicl_key, fhicl_value)
         for i_proc in range(len(self.procinfos)):
-            self.procinfos[i_proc].fhicl_used = re.sub(
-                r"%s\s*:\s*\S+" % (fhicl_key),
-                "%s: %s" % (fhicl_key, fhicl_value),
+            self.procinfos[i_proc].fhicl_used = key_pattern.sub(
+                replacement,
                 self.procinfos[i_proc].fhicl_used,
             )
 
@@ -1289,10 +1400,15 @@ def bookkeeping_for_fhicl_documents_artdaq_v3_base(self):
     # Issue #24231: bookkeep the init_fragment_count to reflect the number of
     # incoming serialized art events
 
+    # Pre-build subsystem+name → procinfo list lookups for init_fragment_count
+    _procinfos_by_ss_name = {}
+    for pi in self.procinfos:
+        _procinfos_by_ss_name.setdefault((pi.subsystem, pi.name), []).append(pi)
+
     # Convenience function: does proc1 send to proc2 via RootNetOutput?
     def sends_to_via_RootNetOutput(proc1, proc2):
 
-        res = re.finditer(r'module_type:\s*"RootNetOutput"', proc1.fhicl_used)
+        res = _RE_ROOT_NET_OUTPUT.finditer(proc1.fhicl_used)
 
         last_start = 0
         for i_res in res:
@@ -1321,7 +1437,7 @@ def bookkeeping_for_fhicl_documents_artdaq_v3_base(self):
         return False
 
     def art_analyzer_count(procinfo):
-        res = re.search(r"\s*art_analyzer_count\s*:\s*([0-9\.e]+)", procinfo.fhicl_used)
+        res = _RE_ART_ANALYZER_CNT.search(procinfo.fhicl_used)
         if res:
             return int(float(res.group(1)))
         return 1
@@ -1330,7 +1446,16 @@ def bookkeeping_for_fhicl_documents_artdaq_v3_base(self):
 
         init_fragment_counts = {}
 
-        for procinfo in [pi for pi in self.procinfos if pi.subsystem == subsystem_id]:
+        for procinfo in (
+            _procinfos_by_ss_name.get((subsystem_id, "EventBuilder"), [])
+            + _procinfos_by_ss_name.get((subsystem_id, "DataLogger"), [])
+            + _procinfos_by_ss_name.get((subsystem_id, "Dispatcher"), [])
+            + _procinfos_by_ss_name.get((subsystem_id, "BoardReader"), [])
+            + _procinfos_by_ss_name.get((subsystem_id, "RoutingManager"), [])
+        ):
+
+            if procinfo.subsystem != subsystem_id:
+                continue
 
             if procinfo.name not in init_fragment_counts:
 
@@ -1339,11 +1464,9 @@ def bookkeeping_for_fhicl_documents_artdaq_v3_base(self):
 
                 if procinfo.name == "EventBuilder":
                     for ss_source in subsystem.sources:
-                        for possible_sender_procinfo in [
-                            pi
-                            for pi in self.procinfos
-                            if pi.subsystem == ss_source and pi.name == "EventBuilder"
-                        ]:
+                        for possible_sender_procinfo in _procinfos_by_ss_name.get(
+                            (ss_source, "EventBuilder"), []
+                        ):
                             if sends_to_via_RootNetOutput(
                                 possible_sender_procinfo, procinfo
                             ):
@@ -1351,12 +1474,9 @@ def bookkeeping_for_fhicl_documents_artdaq_v3_base(self):
                                     possible_sender_procinfo
                                 )
                 elif procinfo.name == "DataLogger":
-                    for possible_sender_procinfo in [
-                        pi
-                        for pi in self.procinfos
-                        if pi.subsystem == procinfo.subsystem
-                        and pi.name == "EventBuilder"
-                    ]:
+                    for possible_sender_procinfo in _procinfos_by_ss_name.get(
+                        (procinfo.subsystem, "EventBuilder"), []
+                    ):
                         if sends_to_via_RootNetOutput(
                             possible_sender_procinfo, procinfo
                         ):
@@ -1364,12 +1484,9 @@ def bookkeeping_for_fhicl_documents_artdaq_v3_base(self):
                                 possible_sender_procinfo
                             )
                 elif procinfo.name == "Dispatcher":
-                    for possible_sender_procinfo in [
-                        pi
-                        for pi in self.procinfos
-                        if pi.subsystem == procinfo.subsystem
-                        and pi.name == "DataLogger"
-                    ]:
+                    for possible_sender_procinfo in _procinfos_by_ss_name.get(
+                        (procinfo.subsystem, "DataLogger"), []
+                    ):
                         if sends_to_via_RootNetOutput(
                             possible_sender_procinfo, procinfo
                         ):
@@ -1379,12 +1496,9 @@ def bookkeeping_for_fhicl_documents_artdaq_v3_base(self):
                     if (
                         init_fragment_count == 0
                     ):  # Dispatcher will _always_ receive init Fragments, this probably means we're running without DataLoggers
-                        for possible_sender_procinfo in [
-                            pi
-                            for pi in self.procinfos
-                            if pi.subsystem == procinfo.subsystem
-                            and pi.name == "EventBuilder"
-                        ]:
+                        for possible_sender_procinfo in _procinfos_by_ss_name.get(
+                            (procinfo.subsystem, "EventBuilder"), []
+                        ):
                             if sends_to_via_RootNetOutput(
                                 possible_sender_procinfo, procinfo
                             ):
@@ -1394,11 +1508,17 @@ def bookkeeping_for_fhicl_documents_artdaq_v3_base(self):
 
                 init_fragment_counts[procinfo.name] = init_fragment_count
 
-            procinfo.fhicl_used = re.sub(
-                "init_fragment_count\s*:\s*\S+",
+            procinfo.fhicl_used = _RE_INIT_FRAG_COUNT.sub(
                 "init_fragment_count: %d" % init_fragment_counts[procinfo.name],
                 procinfo.fhicl_used,
             )
+
+    self.print_log(
+        "d",
+        "Bookkeeping: firstLoggerRank + data_dir + overwrites + init_fragment_count took %.4f s"
+        % (time.time() - _bk_section_start),
+    )
+    self.print_log("d", "Bookkeeping: total time %.4f s" % (time.time() - _bk_start))
 
 
 def bookkeeping_for_fhicl_documents_artdaq_v4_base(self):

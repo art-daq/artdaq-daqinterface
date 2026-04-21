@@ -120,7 +120,7 @@ def launch_procs_on_host(
 
     self.print_log(
         "d",
-        "After check for existing processes on %s" % (host),
+        "%s: After check for existing processes on %s" % (date_and_time(), host),
         executing_commands_debug_level,
     )
 
@@ -182,7 +182,11 @@ def launch_procs_on_host(
             % (host)
         )
     else:
-        self.print_log("d", "...host %s done." % (host), executing_commands_debug_level)
+        self.print_log(
+            "d",
+            "%s: ...host %s done." % (date_and_time(), host),
+            executing_commands_debug_level,
+        )
 
     return status
 
