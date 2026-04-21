@@ -710,8 +710,7 @@ def bookkeeping_for_fhicl_documents_artdaq_v3_base(self):
                         "found in the configuration for %s (%s). DAQInterface sets this "
                         "parameter during bookkeeping - please add "
                         "'expected_fragments_per_event: 0' (or any placeholder value) to "
-                        "the FHiCL document."
-                        % (procinfo.label, procinfo.name)
+                        "the FHiCL document." % (procinfo.label, procinfo.name)
                     )
                 )
 
@@ -744,25 +743,21 @@ def bookkeeping_for_fhicl_documents_artdaq_v3_base(self):
                         "Required FHiCL table 'sources' was not found in the "
                         "configuration for %s (%s). DAQInterface fills in this table "
                         "during bookkeeping - please add 'sources: {}' to the FHiCL "
-                        "document."
-                        % (procinfo.label, procinfo.name)
+                        "document." % (procinfo.label, procinfo.name)
                     )
                 )
 
         # BoardReader processes must have a 'destinations' table placeholder
         # so that bookkeeping can fill in the EventBuilders to send data to.
         if "BoardReader" in procinfo.name:
-            (destinations_start, _) = table_range(
-                procinfo.fhicl_used, "destinations"
-            )
+            (destinations_start, _) = table_range(procinfo.fhicl_used, "destinations")
             if destinations_start == -1:
                 raise Exception(
                     make_paragraph(
                         "Required FHiCL table 'destinations' was not found in the "
                         "configuration for %s (%s). DAQInterface fills in this table "
                         "during bookkeeping - please add 'destinations: {}' to the "
-                        "FHiCL document."
-                        % (procinfo.label, procinfo.name)
+                        "FHiCL document." % (procinfo.label, procinfo.name)
                     )
                 )
     self.print_log(
