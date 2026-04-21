@@ -145,6 +145,8 @@ def launch_procs_on_host(
         executing_commands_debug_level,
     )
 
+    self.print_log("d", "DEBUG %s " % launchcmd, executing_commands_debug_level)
+
     proc = Popen(
         launchcmd,
         executable="/bin/bash",
@@ -155,6 +157,10 @@ def launch_procs_on_host(
     )
     out, _ = proc.communicate()
     status = proc.returncode
+
+
+    self.print_log("d", "out: %s " % out, executing_commands_debug_level)
+    self.print_log("d", "status: %s " % status, executing_commands_debug_level)
 
     if status != 0:
         self.print_log(
@@ -313,16 +319,26 @@ def launch_procs_base(self):
             launch_commands_to_run_on_host_background[procinfo.host] = []
             launch_commands_on_host_to_show_user[procinfo.host] = []
 
+            tmp_launch_attempt_file = "/tmp/launch_attempt_tmp_%s_%s_partition%s" % (
+                procinfo.host,
+                os.environ["USER"],
+                os.environ["DAQINTERFACE_PARTITION_NUMBER"],
+            )
+
             launch_commands_to_run_on_host[procinfo.host].append("set +C")
             launch_commands_to_run_on_host[procinfo.host].append(
-                "echo > %s" % (self.launch_attempt_files[procinfo.host])
+                "echo > %s" % (tmp_launch_attempt_file)
             )
             launch_commands_to_run_on_host[procinfo.host] += get_setup_commands(
-                self.spackdir, self.launch_attempt_files[procinfo.host]
+                self.spackdir, tmp_launch_attempt_file
             )
             launch_commands_to_run_on_host[procinfo.host].append(
                 "source %s for_running >> %s 2>&1 "
-                % (self.daq_setup_script, self.launch_attempt_files[procinfo.host])
+                % (self.daq_setup_script, tmp_launch_attempt_file)
+            )
+            launch_commands_to_run_on_host[procinfo.host].append(
+                "cat %s >> %s && rm %s"
+                % (tmp_launch_attempt_file, self.launch_attempt_files[procinfo.host], tmp_launch_attempt_file)
             )
             launch_commands_to_run_on_host[procinfo.host].append(
                 "export ARTDAQ_LOG_ROOT=%s" % (self.log_directory)
