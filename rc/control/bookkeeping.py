@@ -106,6 +106,7 @@ def bookkeeping_for_fhicl_documents_artdaq_v3_base(self):
         "d",
         "Bookkeeping: max_fragment_size extraction took %.4f s"
         % (time.time() - _bk_section_start),
+        debuglevel=3,
     )
     _bk_section_start = time.time()
 
