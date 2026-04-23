@@ -636,12 +636,11 @@ class DAQInterface(Component):
 
         self.print_log(
             "i",
-            '%s: DAQInterface in partition %s launched and now in "%s" state, listening on port %d'
+            '%s: DAQInterface in partition %s launched and now in "%s" state'
             % (
                 date_and_time(),
                 self.partition_number,
                 self.state(self.name),
-                self.rpc_port,
             ),
         )
 
@@ -2483,6 +2482,7 @@ class DAQInterface(Component):
 
         proc_starttimes = {}
         proc_endtimes = {}
+
         for subsystem in subsystems_in_order:
             for proctype in proctypes_in_order:
 
