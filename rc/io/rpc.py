@@ -45,7 +45,10 @@ class StoppableRPCServer(SimpleXMLRPCServer):
 @contextlib.contextmanager
 def rpc_server(host="", port=6000, funcs={}, timeout=0.01):
     server = StoppableRPCServer((host, port), timeout=timeout)
-    print("DAQInterface RPC server listening on %s:%d" % (host or "0.0.0.0", port), flush=True)
+    print(
+        "DAQInterface RPC server listening on %s:%d" % (host or "0.0.0.0", port),
+        flush=True,
+    )
     with threaded(target=server.serve_forever, name="rpc-server-%s-%d" % (host, port)):
         for name, func in funcs.items():
             server.register_function(func, name)
