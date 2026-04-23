@@ -2482,7 +2482,7 @@ class DAQInterface(Component):
 
         proc_starttimes = {}
         proc_endtimes = {}
-        
+
         for subsystem in subsystems_in_order:
             for proctype in proctypes_in_order:
 
