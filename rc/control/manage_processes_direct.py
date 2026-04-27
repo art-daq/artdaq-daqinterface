@@ -846,7 +846,7 @@ def get_pids_and_labels_on_host(host, procinfos):
             pids.append(line.split()[1])
             labels_of_found_processes.append(res.group(1))
 
-    return cleaned_pids, labels_of_found_processes
+    return pids, labels_of_found_processes
 
 
 def get_related_pids_for_process(procinfo):
