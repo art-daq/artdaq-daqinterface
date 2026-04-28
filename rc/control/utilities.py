@@ -118,7 +118,7 @@ def host_is_local(host):
 
 def get_pids(greptoken, host="localhost", grepresults=None):
 
-    cmd = 'ps aux | grep "%s" | grep -v grep' % (greptoken)
+    cmd = 'ps aux | grep "%s" | grep -v ssh | grep -v grep' % (greptoken)
 
     if not host_is_local(host):
         cmd = "ssh -o BatchMode=yes -x %s '%s'" % (host, cmd)

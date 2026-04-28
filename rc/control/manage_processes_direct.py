@@ -817,41 +817,20 @@ def get_pids_and_labels_on_host(host, procinfos):
             os.environ["DAQINTERFACE_PARTITION_NUMBER"],
         )
     )
-    sshgreptoken = (
-        "[0-9]:[0-9][0-9]\s\+ssh.*\(%s\).*application_name.*partition_number:\s*%s"
-        % (
-            "\|".join(
-                set(
-                    [bootfile_name_to_execname(procinfo.name) for procinfo in procinfos]
-                )
-            ),
-            os.environ["DAQINTERFACE_PARTITION_NUMBER"],
-        )
-    )
-
-    # greptoken =
-    # "[0-9]:[0-9][0-9]\s\+valgrind.*\(%s\).*application_name.*partition_number:\s*%s"
-    # % \
-    #            ("\|".join(set([bootfile_name_to_execname(procinfo.name) for
-    #            procinfo in procinfos])), \
-    # os.environ["DAQINTERFACE_PARTITION_NUMBER"])
 
     grepped_lines = []
     pids = get_pids(greptoken, host, grepped_lines)
 
-    ssh_pids = get_pids(sshgreptoken, host)
-
-    cleaned_pids = [pid for pid in pids if pid not in ssh_pids]
-    cleaned_lines = [line for line in grepped_lines if " ssh " not in line]
-
+    pids = []
     labels_of_found_processes = []
 
-    for line in cleaned_lines:
+    for line in grepped_lines:
         res = re.search(r"application_name:\s+(\S+)", line)
-        assert res
-        labels_of_found_processes.append(res.group(1))
+        if res:
+            pids.append(line.split()[1])
+            labels_of_found_processes.append(res.group(1))
 
-    return cleaned_pids, labels_of_found_processes
+    return pids, labels_of_found_processes
 
 
 def get_related_pids_for_process(procinfo):
