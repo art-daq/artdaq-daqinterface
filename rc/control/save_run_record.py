@@ -275,6 +275,9 @@ def save_run_record_base(self):
                 outf.write("\n" + filename)
 
     outf.write("\n")
+
+    # Ensure file is fully written before copying
+    os.fsync(outf.fileno())
     outf.close()
 
     for recorddir, dummy, recordfiles in os.walk(self.tmp_run_record):
