@@ -1,0 +1,21 @@
+# Project Overview
+
+This project is a run control implementation for the artdaq framework, which is used for data acquisition in high-energy physics experiments. The repository includes code for controlling and monitoring the state of the data acquisition system, as well as documentation and examples to help users get started with artdaq run control.
+
+## Folder Structure
+
+- `./bin`: Contains user scripts for controlling and monitoring the artdaq run control system.
+- `./docs`: Doxygen documentation hook for CMake
+- `./rc`: Main run control implementations
+- `./simple_test_config`: Suite of example configurations that make up the artdaq integration tests
+- `./utils`: Example awk files for parsing artdaq log files and extracting useful information, such as run numbers, timestamps, and error messages.
+
+## Libraries and Frameworks
+
+artdaq is built on the art framework, which provides a modular and flexible architecture for data processing. It also utilizes various C++ libraries for tasks such as serialization, logging, and configuration management.
+
+artdaq is built using CMake and the Spack package manager. A build environment is provided in the `ghcr.io/art-daq/artdaq-spack` Docker image, which includes all necessary dependencies and tools for building and running artdaq. The build environment is located at /opt/artdaq within the container.
+
+## Coding Standards
+
+All C++ source files must be formatted with `clang-format`. C/C++ header files should be formatted with `clang-format` using the `.clang-format-hpp` instruction file if it exists, `.clang-format` otherwise. All python files must be formatted with `black`. The project uses the Google C++ Style Guide as a reference for coding standards, with some modifications to fit the specific needs of the artdaq framework. Developers are encouraged to follow these guidelines to maintain consistency and readability across the codebase.
