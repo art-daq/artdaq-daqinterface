@@ -57,7 +57,7 @@
 	  random_seed: 8250
 	  sleep_on_stop_us: 500000
 	  nADCcounts: 40
-	  max_fragment_size_bytes: 200
+	  max_fragment_size_bytes: 208
 	  throttle_usecs: 100000
 	  distribution_type: 2
 	  timestamp_scale_factor: 1
