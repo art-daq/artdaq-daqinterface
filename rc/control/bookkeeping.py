@@ -258,8 +258,8 @@ def bookkeeping_for_fhicl_documents_artdaq_v3_base(self):
             size += calculate_max_event_size(ss_source)
 
         # enforce minimum
-        if size < 1024:
-            size = 1024
+        if size < 10240:
+            size = 10240
 
         _evt_size_cache[ss] = size
         return size
