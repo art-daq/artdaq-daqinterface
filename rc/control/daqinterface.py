@@ -752,7 +752,7 @@ class DAQInterface(Component):
             with open(self.timing_trace_filename(), "a") as outf:
                 outf.write(" ".join(fields) + "\n")
         except IOError as e:
-            print("WARNING: timing trace write failed, disabling tracing: %s" % e)
+            self.print_log("w", "Timing trace write failed, disabling tracing: %s" % e)
             self._timing_trace_failed = True
 
     def timing_trace_start(self, stage, extra_fields=None):
