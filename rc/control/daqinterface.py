@@ -2563,8 +2563,6 @@ class DAQInterface(Component):
         for subsystem in subsystems_in_order:
             for proctype in proctypes_in_order:
 
-                bucket_start = time()
-
                 priorities_used = {}
 
                 for procinfo in self.procinfos:
@@ -2574,6 +2572,8 @@ class DAQInterface(Component):
                 priority_rankings = sorted(priorities_used.keys())
 
                 for priority in priority_rankings:
+                    bucket_start = time()
+
                     proc_threads = {}
                     for i_procinfo, procinfo in enumerate(self.procinfos):
                         if (
