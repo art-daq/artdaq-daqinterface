@@ -712,6 +712,54 @@ class DAQInterface(Component):
     def disable(self):
         self.__do_disable = True
 
+    def timing_trace_is_enabled(self):
+        token = os.environ.get("DAQINTERFACE_TIMING_TRACE", "true")
+        return token.lower() not in ["0", "false", "no", "off"]
+
+    def timing_trace_filename(self):
+        if "DAQINTERFACE_TIMING_TRACE_FILE" in os.environ:
+            return os.environ["DAQINTERFACE_TIMING_TRACE_FILE"]
+        return "/tmp/daqinterface_timing_%s_partition%s.log" % (
+            os.environ.get("USER", "unknown"),
+            self.partition_number,
+        )
+
+    def timing_trace(self, event, stage, elapsed_s=None, extra_fields=None):
+        if not self.timing_trace_is_enabled():
+            return
+
+        now = datetime.datetime.now().strftime("%Y-%m-%dT%H:%M:%S.%f")
+        fields = [
+            "ts=%s" % (now),
+            "event=%s" % (event),
+            "stage=%s" % (stage),
+            "partition=%s" % (self.partition_number),
+            "pid=%s" % (os.getpid()),
+        ]
+
+        if self.run_number is not None:
+            fields.append("run=%s" % (self.run_number))
+
+        if elapsed_s is not None:
+            fields.append("elapsed_s=%.6f" % (elapsed_s))
+
+        if extra_fields is not None:
+            for key in sorted(extra_fields.keys()):
+                value = str(extra_fields[key]).replace(" ", "_")
+                fields.append("%s=%s" % (key, value))
+
+        with open(self.timing_trace_filename(), "a") as outf:
+            outf.write(" ".join(fields) + "\n")
+
+    def timing_trace_start(self, stage, extra_fields=None):
+        self.timing_trace("begin", stage, extra_fields=extra_fields)
+        return time()
+
+    def timing_trace_end(self, stage, start_time, extra_fields=None):
+        self.timing_trace(
+            "end", stage, elapsed_s=(time() - start_time), extra_fields=extra_fields
+        )
+
     # JCF, Jan-2-2020
 
     # See Issue #23792 for more on trace_get and trace_set
@@ -1202,6 +1250,10 @@ class DAQInterface(Component):
 
     def check_proc_transition(self, target_state):
 
+        transition_check_start = self.timing_trace_start(
+            "check_proc_transition", {"target_state": target_state}
+        )
+
         is_all_ok = True
 
         # The following code will give artdaq processes max_retries
@@ -1238,6 +1290,18 @@ class DAQInterface(Component):
                     ):
                         redeemed = True
                         procinfo.state = target_state
+
+                if retry_counter > 0:
+                    self.timing_trace(
+                        "point",
+                        "check_proc_transition_retries",
+                        extra_fields={
+                            "label": procinfo.label,
+                            "retries": retry_counter,
+                            "target_state": target_state,
+                            "lastreturned": procinfo.lastreturned,
+                        },
+                    )
 
                 if redeemed:
                     successmsg = (
@@ -1290,7 +1354,18 @@ class DAQInterface(Component):
                 is_all_ok = False
 
         if not is_all_ok:
+            self.timing_trace_end(
+                "check_proc_transition",
+                transition_check_start,
+                {"target_state": target_state, "result": "failure"},
+            )
             raise Exception("At least one artdaq process failed a transition")
+
+        self.timing_trace_end(
+            "check_proc_transition",
+            transition_check_start,
+            {"target_state": target_state, "result": "success"},
+        )
 
     def have_artdaq_mfextensions(self):
 
@@ -2263,6 +2338,8 @@ class DAQInterface(Component):
 
     def do_command(self, command):
 
+        do_command_start = self.timing_trace_start("do_command", {"command": command})
+
         if command != "Start" and command != "Init" and command != "Stop":
             self.print_log(
                 "i", "\n%s: %s transition underway" % (date_and_time(), command.upper())
@@ -2486,6 +2563,8 @@ class DAQInterface(Component):
         for subsystem in subsystems_in_order:
             for proctype in proctypes_in_order:
 
+                bucket_start = time()
+
                 priorities_used = {}
 
                 for procinfo in self.procinfos:
@@ -2513,7 +2592,26 @@ class DAQInterface(Component):
                         proc_threads[label].join()
                         proc_endtimes[label] = time()
 
+                    if len(proc_threads) > 0:
+                        self.timing_trace(
+                            "point",
+                            "do_command_bucket",
+                            elapsed_s=(time() - bucket_start),
+                            extra_fields={
+                                "command": command,
+                                "subsystem": subsystem,
+                                "proctype": proctype,
+                                "priority": priority,
+                                "nprocs": len(proc_threads),
+                            },
+                        )
+
         if self.exception:
+            self.timing_trace_end(
+                "do_command",
+                do_command_start,
+                {"command": command, "result": "exception"},
+            )
             raise Exception(
                 make_paragraph(
                     "An exception was thrown during the %s transition." % (command)
@@ -2570,12 +2668,21 @@ class DAQInterface(Component):
         try:
             self.check_proc_transition(self.target_states[command])
         except Exception:
+            self.timing_trace_end(
+                "do_command",
+                do_command_start,
+                {"command": command, "result": "transition_failure"},
+            )
             raise Exception(
                 make_paragraph(
                     "An exception was thrown during the %s transition as at least one of the artdaq processes didn't achieve its desired state."
                     % (command)
                 )
             )
+
+        self.timing_trace_end(
+            "do_command", do_command_start, {"command": command, "result": "success"}
+        )
 
         if command != "Init" and command != "Start" and command != "Stop":
 
@@ -3494,6 +3601,8 @@ class DAQInterface(Component):
 
     def do_config(self, subconfigs_for_run=[]):
 
+        do_config_start = self.timing_trace_start("do_config_total")
+
         self.print_log("i", "\n%s: CONFIG transition underway" % (date_and_time()))
 
         os.chdir(self.daqinterface_base_dir)
@@ -3509,17 +3618,29 @@ class DAQInterface(Component):
 
         starttime = time()
         self.print_log("i", "\nObtaining FHiCL documents...", 1, False)
+        config_info_start = self.timing_trace_start("do_config_get_config_info")
 
         try:
             tmpdir_for_fhicl, self.fhicl_file_path = self.get_config_info()
             assert "/tmp" == tmpdir_for_fhicl[:4]
         except:
+            self.timing_trace_end(
+                "do_config_get_config_info", config_info_start, {"result": "failure"}
+            )
+            self.timing_trace_end(
+                "do_config_total", do_config_start, {"result": "failure"}
+            )
             self.revert_failed_transition("calling get_config_info()")
             return
+
+        self.timing_trace_end(
+            "do_config_get_config_info", config_info_start, {"result": "success"}
+        )
 
         rootfile_cntr = 0
 
         filename_dictionary = {}  # If we find a repeated *.fcl file, that's an error
+        resolve_fhicl_start = self.timing_trace_start("do_config_resolve_fhicl")
 
         for dummy, dummy, filenames in os.walk(tmpdir_for_fhicl):
             for filename in filenames:
@@ -3580,6 +3701,14 @@ class DAQInterface(Component):
                         )
                     ),
                 )
+                self.timing_trace_end(
+                    "do_config_resolve_fhicl",
+                    resolve_fhicl_start,
+                    {"result": "missing_fhicl", "label": self.procinfos[i_proc].label},
+                )
+                self.timing_trace_end(
+                    "do_config_total", do_config_start, {"result": "failure"}
+                )
                 self.revert_failed_transition("looking for all needed FHiCL documents")
                 return
 
@@ -3588,6 +3717,14 @@ class DAQInterface(Component):
                 self.procinfos[i_proc].update_fhicl(fcl)
             except Exception:
                 self.print_log("e", traceback.format_exc())
+                self.timing_trace_end(
+                    "do_config_resolve_fhicl",
+                    resolve_fhicl_start,
+                    {"result": "update_fhicl_exception", "label": self.procinfos[i_proc].label},
+                )
+                self.timing_trace_end(
+                    "do_config_total", do_config_start, {"result": "failure"}
+                )
                 self.alert_and_recover(
                     "An exception was thrown when creating the process FHiCL documents; see traceback above for more info"
                 )
@@ -3612,6 +3749,11 @@ class DAQInterface(Component):
 
         endtime = time()
         self.print_log("i", "done (%.1f seconds)." % (endtime - starttime))
+        self.timing_trace_end(
+            "do_config_resolve_fhicl",
+            resolve_fhicl_start,
+            {"result": "success", "nprocs": len(self.procinfos)},
+        )
 
         for procinfo in self.procinfos:
             assert not procinfo.fhicl is None and not procinfo.fhicl_used is None
@@ -3621,6 +3763,7 @@ class DAQInterface(Component):
 
         starttime = time()
         self.print_log("i", "Reformatting the FHiCL documents...", 1, False)
+        reformat_start = self.timing_trace_start("do_config_reformat_fhicl")
 
         try:
             self.create_setup_fhiclcpp_if_needed()
@@ -3638,20 +3781,33 @@ class DAQInterface(Component):
 
         endtime = time()
         self.print_log("i", "done (%.1f seconds)." % (endtime - starttime))
+        self.timing_trace_end(
+            "do_config_reformat_fhicl", reformat_start, {"result": "success"}
+        )
 
         starttime = time()
         self.print_log("i", "Bookkeeping the FHiCL documents...", 1, False)
+        bookkeeping_start = self.timing_trace_start("do_config_bookkeeping")
 
         try:
             self.bookkeeping_for_fhicl_documents()
         except Exception:
             self.print_log("e", traceback.format_exc())
+            self.timing_trace_end(
+                "do_config_bookkeeping", bookkeeping_start, {"result": "failure"}
+            )
+            self.timing_trace_end(
+                "do_config_total", do_config_start, {"result": "failure"}
+            )
             self.alert_and_recover(
                 "An exception was thrown when performing bookkeeping on the process FHiCL documents; see traceback above for more info"
             )
             return
         endtime = time()
         self.print_log("i", "done (%.1f seconds)." % (endtime - starttime))
+        self.timing_trace_end(
+            "do_config_bookkeeping", bookkeeping_start, {"result": "success"}
+        )
 
         self.tmp_run_record = "/tmp/run_record_attempted_%s/%s" % (
             os.environ["USER"],
@@ -3674,6 +3830,7 @@ class DAQInterface(Component):
 
         starttime = time()
         self.print_log("i", "Saving the run record...", 1, False)
+        save_run_record_start = self.timing_trace_start("do_config_save_run_record")
         # self.print_log("d", "\n", 2)
 
         try:
@@ -3689,30 +3846,54 @@ class DAQInterface(Component):
 
         endtime = time()
         self.print_log("i", "done (%.1f seconds)." % (endtime - starttime))
+        self.timing_trace_end(
+            "do_config_save_run_record", save_run_record_start, {"result": "done"}
+        )
 
+        check_config_start = self.timing_trace_start("do_config_check_config")
         try:
             self.check_config()
         except Exception:
             self.print_log("w", traceback.format_exc())
+            self.timing_trace_end(
+                "do_config_check_config", check_config_start, {"result": "failure"}
+            )
+            self.timing_trace_end(
+                "do_config_total", do_config_start, {"result": "failure"}
+            )
             self.revert_failed_transition(
                 "calling experiment-defined function check_config()"
             )
             return
+        self.timing_trace_end(
+            "do_config_check_config", check_config_start, {"result": "success"}
+        )
 
         if self.manage_processes:
 
             self.readjust_process_priorities(self.boardreader_priorities_on_config)
 
+            init_start = self.timing_trace_start("do_config_init_transition")
             try:
                 self.do_command("Init")
             except Exception:
                 self.print_log("d", traceback.format_exc(), 2)
+                self.timing_trace_end(
+                    "do_config_init_transition", init_start, {"result": "failure"}
+                )
+                self.timing_trace_end(
+                    "do_config_total", do_config_start, {"result": "failure"}
+                )
                 self.alert_and_recover(
                     'An exception was thrown when attempting to send the "init" transition to the artdaq processes; see messages above for more info'
                 )
                 return
+            self.timing_trace_end(
+                "do_config_init_transition", init_start, {"result": "success"}
+            )
 
             starttime = time()
+            archive_start = self.timing_trace_start("do_config_archive_documents")
 
             self.print_log(
                 "i",
@@ -3745,6 +3926,9 @@ class DAQInterface(Component):
 
             endtime = time()
             self.print_log("i", "done (%.1f seconds)." % (endtime - starttime))
+            self.timing_trace_end(
+                "do_config_archive_documents", archive_start, {"result": "success"}
+            )
 
         self.complete_state_change(self.name, "configuring")
 
@@ -3758,6 +3942,9 @@ class DAQInterface(Component):
             )
 
         self.print_log("i", "\n%s: CONFIG transition complete" % (date_and_time()))
+        self.timing_trace_end(
+            "do_config_total", do_config_start, {"result": "success"}
+        )
         return "done"
 
     def do_start_running(self, run_number=None):
