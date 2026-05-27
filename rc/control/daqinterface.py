@@ -725,7 +725,7 @@ class DAQInterface(Component):
         )
 
     def timing_trace(self, event, stage, elapsed_s=None, extra_fields=None):
-        if not self.timing_trace_is_enabled():
+        if not self.timing_trace_is_enabled() or getattr(self, "_timing_trace_failed", False):
             return
 
         now = datetime.datetime.now().strftime("%Y-%m-%dT%H:%M:%S.%f")
@@ -748,8 +748,12 @@ class DAQInterface(Component):
                 value = str(extra_fields[key]).replace(" ", "_")
                 fields.append("%s=%s" % (key, value))
 
-        with open(self.timing_trace_filename(), "a") as outf:
-            outf.write(" ".join(fields) + "\n")
+        try:
+            with open(self.timing_trace_filename(), "a") as outf:
+                outf.write(" ".join(fields) + "\n")
+        except IOError as e:
+            print("WARNING: timing trace write failed, disabling tracing: %s" % e)
+            self._timing_trace_failed = True
 
     def timing_trace_start(self, stage, extra_fields=None):
         self.timing_trace("begin", stage, extra_fields=extra_fields)
