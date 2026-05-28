@@ -439,7 +439,6 @@ def construct_checked_command(cmds):
 
         checked_cmds.append(cmd)
 
-
         if not re.search(r"\s*&\s*$", cmd):
             check_cmd = (
                 'if [[ "$?" != "0" ]]; then echo %s: Nonzero return value from the following command: "%s" >> /tmp/daqinterface_checked_command_failures_%s.log; exit 1; fi '

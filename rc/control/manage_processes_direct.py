@@ -158,7 +158,6 @@ def launch_procs_on_host(
     out, _ = proc.communicate()
     status = proc.returncode
 
-
     self.print_log("d", "out: %s " % out, executing_commands_debug_level)
     self.print_log("d", "status: %s " % status, executing_commands_debug_level)
 
@@ -338,7 +337,11 @@ def launch_procs_base(self):
             )
             launch_commands_to_run_on_host[procinfo.host].append(
                 "cat %s >> %s && rm %s"
-                % (tmp_launch_attempt_file, self.launch_attempt_files[procinfo.host], tmp_launch_attempt_file)
+                % (
+                    tmp_launch_attempt_file,
+                    self.launch_attempt_files[procinfo.host],
+                    tmp_launch_attempt_file,
+                )
             )
             launch_commands_to_run_on_host[procinfo.host].append(
                 "export ARTDAQ_LOG_ROOT=%s" % (self.log_directory)
