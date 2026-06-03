@@ -713,56 +713,83 @@ class DAQInterface(Component):
         self.__do_disable = True
 
     def timing_trace_is_enabled(self):
-        token = os.environ.get("DAQINTERFACE_TIMING_TRACE", "true")
-        return token.lower() not in ["0", "false", "no", "off"]
+        return getattr(self, "timing_trace_enabled", False)
 
-    def timing_trace_filename(self):
-        if "DAQINTERFACE_TIMING_TRACE_FILE" in os.environ:
-            return os.environ["DAQINTERFACE_TIMING_TRACE_FILE"]
-        return "/tmp/daqinterface_timing_%s_partition%s.log" % (
-            os.environ.get("USER", "unknown"),
-            self.partition_number,
-        )
+    # Timing-trace entries are accumulated during a transition and emitted as a
+    # single summary block when the outermost timed stage completes, rather than
+    # logging a line per begin/end as each stage runs. Nesting is tracked via a
+    # depth counter (a timed stage such as do_config_total may itself contain a
+    # nested do_command), so the flush happens exactly once, at depth zero.
+
+    def _timing_trace_init(self):
+        if not hasattr(self, "_timing_trace_entries"):
+            self._timing_trace_entries = []
+            self._timing_trace_depth = 0
 
     def timing_trace(self, event, stage, elapsed_s=None, extra_fields=None):
-        if not self.timing_trace_is_enabled() or getattr(self, "_timing_trace_failed", False):
+        if not self.timing_trace_is_enabled():
             return
 
-        now = datetime.datetime.now().strftime("%Y-%m-%dT%H:%M:%S.%f")
-        fields = [
-            "ts=%s" % (now),
-            "event=%s" % (event),
-            "stage=%s" % (stage),
-            "partition=%s" % (self.partition_number),
-            "pid=%s" % (os.getpid()),
-        ]
-
-        if self.run_number is not None:
-            fields.append("run=%s" % (self.run_number))
-
-        if elapsed_s is not None:
-            fields.append("elapsed_s=%.6f" % (elapsed_s))
-
-        if extra_fields is not None:
-            for key in sorted(extra_fields.keys()):
-                value = str(extra_fields[key]).replace(" ", "_")
-                fields.append("%s=%s" % (key, value))
-
-        try:
-            with open(self.timing_trace_filename(), "a") as outf:
-                outf.write(" ".join(fields) + "\n")
-        except IOError as e:
-            self.print_log("w", "Timing trace write failed, disabling tracing: %s" % e)
-            self._timing_trace_failed = True
+        self._timing_trace_init()
+        self._timing_trace_entries.append((stage, elapsed_s, extra_fields))
 
     def timing_trace_start(self, stage, extra_fields=None):
-        self.timing_trace("begin", stage, extra_fields=extra_fields)
+        if self.timing_trace_is_enabled():
+            self._timing_trace_init()
+            self._timing_trace_depth += 1
         return time()
 
     def timing_trace_end(self, stage, start_time, extra_fields=None):
         self.timing_trace(
             "end", stage, elapsed_s=(time() - start_time), extra_fields=extra_fields
         )
+
+        if not self.timing_trace_is_enabled():
+            return
+
+        self._timing_trace_depth -= 1
+        if self._timing_trace_depth <= 0:
+            self.timing_trace_flush(stage, extra_fields)
+
+    def timing_trace_flush(self, top_stage, top_fields=None):
+        entries = self._timing_trace_entries
+        self._timing_trace_entries = []
+        self._timing_trace_depth = 0
+
+        header_fields = [
+            top_stage,
+            "partition=%s" % (self.partition_number),
+            "pid=%s" % (os.getpid()),
+        ]
+
+        if self.run_number is not None:
+            header_fields.append("run=%s" % (self.run_number))
+
+        if top_fields is not None:
+            for key in sorted(top_fields.keys()):
+                value = str(top_fields[key]).replace(" ", "_")
+                header_fields.append("%s=%s" % (key, value))
+
+        lines = ["TIMING TRACE: %s" % (" ".join(header_fields))]
+
+        # Sort the timed stages slowest-first; "point" events (no elapsed_s)
+        # are listed afterwards with their extra fields.
+        timed = [e for e in entries if e[1] is not None]
+        points = [e for e in entries if e[1] is None]
+
+        for stage, elapsed_s, _ in sorted(timed, key=lambda e: e[1], reverse=True):
+            lines.append("    %-40s %8.3fs" % (stage, elapsed_s))
+
+        for stage, _, extra_fields in points:
+            extras = ""
+            if extra_fields is not None:
+                extras = " " + " ".join(
+                    "%s=%s" % (key, str(extra_fields[key]).replace(" ", "_"))
+                    for key in sorted(extra_fields.keys())
+                )
+            lines.append("    %-40s (point)%s" % (stage, extras))
+
+        self.print_log("d", "\n".join(lines))
 
     # JCF, Jan-2-2020
 
@@ -932,6 +959,7 @@ class DAQInterface(Component):
 
         self.use_messageviewer = True
         self.use_messagefacility = True
+        self.timing_trace_enabled = True
         self.advanced_memory_usage = False
         self.strict_fragment_id_mode = False
         self.fake_messagefacility = False
@@ -1127,6 +1155,11 @@ class DAQInterface(Component):
 
                 if res:
                     self.use_messagefacility = False
+            elif "timing_trace_enabled" in line or "timing trace enabled" in line:
+                token = line.split()[-1].strip()
+
+                # Defaults to true; allow the settings file to turn it off.
+                self.timing_trace_enabled = re.search(r"[Ff]alse", token) is None
             elif "advanced_memory_usage" in line or "advanced memory usage" in line:
                 token = line.split()[-1].strip()
 
@@ -4678,6 +4711,12 @@ class DAQInterface(Component):
                 self.perform_periodic_action()
 
         except Exception:
+            # Emit whatever timing was gathered before the exception, and reset
+            # the buffer so a partial transition doesn't leak into the next one.
+            if self.timing_trace_is_enabled() and getattr(
+                self, "_timing_trace_entries", None
+            ):
+                self.timing_trace_flush("transition_failed")
             self.in_recovery = True
             self.alert_and_recover(traceback.format_exc())
             self.in_recovery = False
