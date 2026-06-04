@@ -158,7 +158,6 @@ def launch_procs_on_host(
     out, _ = proc.communicate()
     status = proc.returncode
 
-
     self.print_log("d", "out: %s " % out, executing_commands_debug_level)
     self.print_log("d", "status: %s " % status, executing_commands_debug_level)
 

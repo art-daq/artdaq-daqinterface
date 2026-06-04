@@ -727,7 +727,9 @@ class DAQInterface(Component):
             self._timing_trace_depth = 0
 
     def timing_trace(self, event, stage, elapsed_s=None, extra_fields=None):
-        if not self.timing_trace_is_enabled():
+        if not self.timing_trace_is_enabled() or getattr(
+            self, "_timing_trace_failed", False
+        ):
             return
 
         self._timing_trace_init()
@@ -3757,7 +3759,10 @@ class DAQInterface(Component):
                 self.timing_trace_end(
                     "do_config_resolve_fhicl",
                     resolve_fhicl_start,
-                    {"result": "update_fhicl_exception", "label": self.procinfos[i_proc].label},
+                    {
+                        "result": "update_fhicl_exception",
+                        "label": self.procinfos[i_proc].label,
+                    },
                 )
                 self.timing_trace_end(
                     "do_config_total", do_config_start, {"result": "failure"}
@@ -3979,9 +3984,7 @@ class DAQInterface(Component):
             )
 
         self.print_log("i", "\n%s: CONFIG transition complete" % (date_and_time()))
-        self.timing_trace_end(
-            "do_config_total", do_config_start, {"result": "success"}
-        )
+        self.timing_trace_end("do_config_total", do_config_start, {"result": "success"})
         return "done"
 
     def do_start_running(self, run_number=None):
