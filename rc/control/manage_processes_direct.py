@@ -145,6 +145,8 @@ def launch_procs_on_host(
         executing_commands_debug_level,
     )
 
+    self.print_log("d", "DEBUG %s " % launchcmd, executing_commands_debug_level)
+
     proc = Popen(
         launchcmd,
         executable="/bin/bash",
@@ -155,6 +157,9 @@ def launch_procs_on_host(
     )
     out, _ = proc.communicate()
     status = proc.returncode
+
+    self.print_log("d", "out: %s " % out, executing_commands_debug_level)
+    self.print_log("d", "status: %s " % status, executing_commands_debug_level)
 
     if status != 0:
         self.print_log(
@@ -314,9 +319,6 @@ def launch_procs_base(self):
             launch_commands_on_host_to_show_user[procinfo.host] = []
 
             launch_commands_to_run_on_host[procinfo.host].append("set +C")
-            launch_commands_to_run_on_host[procinfo.host].append(
-                "echo > %s" % (self.launch_attempt_files[procinfo.host])
-            )
             launch_commands_to_run_on_host[procinfo.host] += get_setup_commands(
                 self.spackdir, self.launch_attempt_files[procinfo.host]
             )
