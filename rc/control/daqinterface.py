@@ -978,6 +978,26 @@ class DAQInterface(Component):
 
         self.spackdir = None
 
+        # Database settings for run record saving (optional)
+        # Initialize from environment variables first (as defaults), then settings file will overwrite
+        # Support both OTSDAQ_RUN_RECORD_DATABASE_* and RUN_RECORD_DATABASE_* patterns
+        env_enabled = os.environ.get("RUN_RECORD_DATABASE_ENABLED")
+        if env_enabled:
+            token = env_enabled.strip()
+            res = re.search(r"[Tt]rue", token)
+            self.enable_run_record_database = bool(res)
+        else:
+            self.enable_run_record_database = False
+        
+        self.run_record_database_name = os.environ.get("OTSDAQ_RUNINFO_DATABASE_NAME") or os.environ.get("RUN_RECORD_DATABASE_NAME") or "run_info"
+        self.run_record_database_host = os.environ.get("OTSDAQ_RUNINFO_DATABASE_HOST") or os.environ.get("RUN_RECORD_DATABASE_HOST") or ""
+        self.run_record_database_port = os.environ.get("OTSDAQ_RUNINFO_DATABASE_PORT") or os.environ.get("RUN_RECORD_DATABASE_PORT") or ""
+        self.run_record_database_user = os.environ.get("OTSDAQ_RUNINFO_DATABASE_USER") or os.environ.get("RUN_RECORD_DATABASE_USER") or ""
+        self.run_record_database_pwd = os.environ.get("OTSDAQ_RUNINFO_DATABASE_PWD") or os.environ.get("RUN_RECORD_DATABASE_PWD") or ""
+        self.run_record_database_schema = os.environ.get("OTSDAQ_RUNINFO_DATABASE_SCHEMA") or os.environ.get("RUN_RECORD_DATABASE_SCHEMA") or "test"
+        # Prefix only checks RUN_RECORD_DATABASE_PREFIX (no OTSDAQ_ version)
+        self.run_record_database_prefix = os.environ.get("RUN_RECORD_DATABASE_PREFIX") or "artdaq"
+
         for line in inf.readlines():
 
             line = expand_environment_variable_in_string(line)
@@ -1216,6 +1236,52 @@ class DAQInterface(Component):
 
                 if res:
                     self.attempt_existing_pid_kill = True
+            elif (
+                "run_record_database_enabled" in line
+                or "run record database enabled" in line
+            ):
+                token = line.split()[-1].strip()
+                res = re.search(r"[Tt]rue", token)
+                if res:
+                    self.enable_run_record_database = True
+            elif (
+                "run_record_database_name" in line
+                or "run record database name" in line
+            ):
+                self.run_record_database_name = line.split()[-1].strip()
+            elif (
+                "run_record_database_host" in line
+                or "run record database host" in line
+            ):
+                self.run_record_database_host = line.split()[-1].strip()
+            elif (
+                "run_record_database_port" in line
+                or "run record database port" in line
+            ):
+                self.run_record_database_port = line.split()[-1].strip()
+            elif (
+                "run_record_database_user" in line
+                or "run record database user" in line
+            ):
+                self.run_record_database_user = line.split()[-1].strip()
+            elif (
+                "run_record_database_pwd" in line
+                or "run record database pwd" in line
+                or "run_record_database_password" in line
+                or "run record database password" in line
+            ):
+                self.run_record_database_pwd = line.split()[-1].strip()
+            elif (
+                "run_record_database_schema" in line
+                or "run record database schema" in line
+            ):
+                self.run_record_database_schema = line.split()[-1].strip()
+            elif (
+                "run_record_database_prefix" in line
+                or "run record database prefix" in line
+            ):
+                self.run_record_database_prefix = line.split()[-1].strip()
+
 
         missing_vars = []
 
@@ -4021,6 +4087,18 @@ class DAQInterface(Component):
 
             try:
                 shutil.copytree(self.tmp_run_record, run_record_directory)
+                
+                # Save run record to database now that run_number is available
+                try:
+                    from rc.control.save_run_record import _save_run_record_to_database
+                    _save_run_record_to_database(self)
+                except Exception:
+                    # Don't fail the start transition if database save fails
+                    self.print_log("w", traceback.format_exc())
+                    self.print_log(
+                        "w",
+                        "Failed to save run record to database, but continuing with start transition",
+                    )
             except:
                 self.print_log("e", traceback.format_exc())
                 self.alert_and_recover(
