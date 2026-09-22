@@ -1761,7 +1761,7 @@ class DAQInterface(Component):
                     % ("\n".join([procinfo.label for procinfo in self.procinfos])),
                 )
 
-            return all_ok
+        return all_ok
 
     def init_process_requirements(self):
         self.overriding_process_requirements = []
