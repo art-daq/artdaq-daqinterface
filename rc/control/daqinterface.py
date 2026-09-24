@@ -1699,7 +1699,13 @@ class DAQInterface(Component):
                     ):
                         raise Exception(
                             make_paragraph(
-                                'Error: artdaq process "%s" has repeatedly returned "[Errno 111] Connection refused" when queried; this most likely means it\'s died'
+                                'Error: artdaq process "%s" at %s:%s has repeatedly returned "[Errno 111] Connection refused" when queried; this most likely means it\'s died -- try checking logfile %s for details'
+                                % (
+                                    procinfo.label,
+                                    procinfo.host,
+                                    procinfo.port,
+                                    self.determine_logfilename(procinfo),
+                                )
                             )
                         )
                     else:
@@ -1761,7 +1767,7 @@ class DAQInterface(Component):
                     % ("\n".join([procinfo.label for procinfo in self.procinfos])),
                 )
 
-            return all_ok
+        return all_ok
 
     def init_process_requirements(self):
         self.overriding_process_requirements = []
