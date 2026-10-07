@@ -33,6 +33,18 @@ _RE_FRAGMENT_IDS_SUB = re.compile(r"fragment_ids\s*:\s*\[[0-9, ]*\]")
 _RE_SENDS_NO_FRAGS = re.compile(r"\n\s*sends_no_fragments\s*:\s*[Tt]rue")
 _RE_GEN_FRAGS_ZERO = re.compile(r"\n\s*generated_fragments_per_event\s*:\s*0")
 _RE_EXPECTED_FRAGS = re.compile(r"expected_fragments_per_event\s*:\s*[0-9]+")
+# Explicit per-output-module flag marking a RootNetOutput/BinaryNetOutput as
+# sending to the EventBuilders of the destination subsystem rather than to
+# the DataLoggers of its own subsystem. Only uncommented lines match.
+_RE_INTER_SUBSYSTEM_TRANSFER = re.compile(
+    r"^[^#\n]*\binter_subsystem_transfer\s*:\s*([Tt]rue|[Ff]alse)", re.MULTILINE
+)
+# Explicit per-output-module routing: names the receiving processes directly
+# by their boot-file label, e.g. destination_labels: [ "LumiLogger" ].
+# Only uncommented lines match.
+_RE_DESTINATION_LABELS = re.compile(
+    r"^[^#\n]*\bdestination_labels\s*:\s*\[([^\]]*)\]", re.MULTILINE
+)
 _RE_HOST_MAP = re.compile(r"host_map\s*:\s*\[.*?\]")
 _RE_REQ_ADDR = re.compile(r'request_address\s*:\s*["0-9\.]+')
 _RE_PARTITION = re.compile(r"partition_number\s*:\s*[0-9]+")
@@ -449,13 +461,119 @@ def bookkeeping_for_fhicl_documents_artdaq_v3_base(self):
                 )
         _inter_ss_eb_sources[ss] = sorted(source_ebs, key=lambda p: p.rank)
 
+    # Explicit per-output-module routing. An output module block may carry
+    #   destination_labels: [ "LabelA", "LabelB" ]
+    # naming its receivers directly by boot-file label. Such receivers are
+    # "claimed": they are removed from the default destination pool (so
+    # unlabeled output modules no longer send to them), and their sources
+    # table lists exactly the processes that name them. Mixing is supported
+    # per output module: a process may route one labeled output explicitly
+    # while its other, unlabeled outputs keep the default routing -- such a
+    # process stays in the source lists of unclaimed receivers. With no
+    # destination_labels anywhere, behavior is unchanged.
+    _procinfo_by_label = {pi.label: pi for pi in self.procinfos}
+    _claimed_senders = {}  # receiver label -> list of sender procinfos
+
+    def parse_destination_labels(fhicl_fragment):
+        # None when no (uncommented) destination_labels key is present; a list
+        # otherwise. An empty list is meaningful: "explicitly no destinations".
+        labels = None
+        for res in _RE_DESTINATION_LABELS.finditer(fhicl_fragment):
+            if labels is None:
+                labels = []
+            for token in res.group(1).split(","):
+                token = token.strip().strip('"').strip("'").strip()
+                if token and token not in labels:
+                    labels.append(token)
+        return labels
+
+    def destinations_block_labels(fhicl):
+        # One entry per non-"message" destinations table, located exactly the
+        # way the table-writing loop below locates them, so claims always
+        # match the destinations that get written. Note that
+        # enclosing_table_range() ends at the destinations table's opening
+        # brace: destination_labels must precede destinations in its block.
+        blocks = []
+        searchstart = 0
+        (table_start, table_end) = table_range(fhicl, "destinations")
+        while table_start != -1 and table_end != -1:
+            if enclosing_table_name(fhicl, "destinations", searchstart) != "message":
+                labels = None
+                (block_start, block_end) = enclosing_table_range(
+                    fhicl, "destinations", table_start
+                )
+                if block_start != -1:
+                    labels = parse_destination_labels(fhicl[block_start:block_end])
+                blocks.append(labels)
+            searchstart = table_end
+            (table_start, table_end) = table_range(fhicl, "destinations", searchstart)
+        return blocks
+
+    _explicit_senders = set()  # senders with at least one labeled output module
+    _default_output_senders = set()  # senders with at least one unlabeled one
+    for pi in self.procinfos:
+        for labels in destinations_block_labels(pi.fhicl_used):
+            if labels is None:
+                _default_output_senders.add(pi.label)
+                continue
+            _explicit_senders.add(pi.label)
+            for label in labels:
+                if label not in _procinfo_by_label:
+                    raise Exception(
+                        make_paragraph(
+                            'Bookkeeping error: process %s names "%s" in a '
+                            "destination_labels list, but no artdaq process with "
+                            "that label exists in the boot file" % (pi.label, label)
+                        )
+                    )
+                senders = _claimed_senders.setdefault(label, [])
+                if all(s.label != pi.label for s in senders):
+                    senders.append(pi)
+    for label in _claimed_senders:
+        _claimed_senders[label].sort(key=lambda p: p.rank)
+
+    def _sends_to_default_pool(sender):
+        # Senders without any labeled output keep today's behavior; senders
+        # with labeled outputs still feed the default pool through their
+        # unlabeled output modules, if they have any.
+        return (
+            sender.label not in _explicit_senders
+            or sender.label in _default_output_senders
+        )
+
+    def _unclaimed(procinfo_list):
+        return [p for p in procinfo_list if p.label not in _claimed_senders]
+
+    def _merge_by_rank(list_a, list_b):
+        seen = set()
+        merged = []
+        for p in list(list_a) + list(list_b):
+            if p.rank not in seen:
+                seen.add(p.rank)
+                merged.append(p)
+        return sorted(merged, key=lambda p: p.rank)
+
+    if _claimed_senders:
+        self.print_log(
+            "i",
+            "Bookkeeping: explicit destination_labels routing in use: %s"
+            % ", ".join(
+                "%s <- [%s]" % (lbl, ", ".join(s.label for s in snd))
+                for lbl, snd in sorted(_claimed_senders.items())
+            ),
+        )
+
     # This function will construct the sources or destinations table
     # for a given process.  If we're performing advanced memory usage,
     # the max event size will need to be provided; this value is used
     # to calculate the size of the buffers in the transfer plugins
 
     def create_sources_or_destinations_string(
-        procinfo, nodetype, max_event_size, inter_subsystem_transfer=False
+        procinfo,
+        nodetype,
+        max_event_size,
+        inter_subsystem_transfer=False,
+        explicit_destination_labels=None,
     ):
 
         if nodetype == "sources":
@@ -505,7 +623,21 @@ def bookkeeping_for_fhicl_documents_artdaq_v3_base(self):
         # Use pre-grouped lookup tables to select only relevant processes
         procinfos_for_string = []
 
-        if not inter_subsystem_transfer:
+        explicit_destinations = (
+            explicit_destination_labels is not None and nodetype == "destinations"
+        )
+        # A receiver named in some output module's destination_labels gets
+        # exactly those senders as its sources
+        claimed_receiver = nodetype == "sources" and procinfo.label in _claimed_senders
+
+        if explicit_destinations:
+            procinfos_for_string = sorted(
+                [_procinfo_by_label[lbl] for lbl in explicit_destination_labels],
+                key=lambda p: p.rank,
+            )
+        elif claimed_receiver and proc_type in ("DataLogger", "Dispatcher"):
+            procinfos_for_string = list(_claimed_senders[procinfo.label])
+        elif not inter_subsystem_transfer:
             if proc_type == "BoardReader" and nodetype == "destinations":
                 procinfos_for_string = list(
                     _procinfos_by_ss_type.get((ss, "EventBuilder"), [])
@@ -516,37 +648,51 @@ def bookkeeping_for_fhicl_documents_artdaq_v3_base(self):
                         _procinfos_by_ss_type.get((ss, "BoardReader"), [])
                     )
                 elif nodetype == "destinations":
-                    procinfos_for_string = list(
+                    procinfos_for_string = _unclaimed(
                         _procinfos_by_ss_type.get((ss, "DataLogger"), [])
                     )
                     if not procinfo_subsystem_has_dataloggers:
                         procinfos_for_string.extend(
-                            _procinfos_by_ss_type.get((ss, "Dispatcher"), [])
+                            _unclaimed(
+                                _procinfos_by_ss_type.get((ss, "Dispatcher"), [])
+                            )
                         )
                     procinfos_for_string.sort(key=lambda p: p.rank)
             elif proc_type == "DataLogger":
                 if nodetype == "sources":
-                    procinfos_for_string = list(
-                        _procinfos_by_ss_type.get((ss, "EventBuilder"), [])
-                    )
+                    procinfos_for_string = [
+                        eb
+                        for eb in _procinfos_by_ss_type.get((ss, "EventBuilder"), [])
+                        if _sends_to_default_pool(eb)
+                    ]
                 elif nodetype == "destinations":
-                    procinfos_for_string = list(
+                    procinfos_for_string = _unclaimed(
                         _procinfos_by_ss_type.get((ss, "Dispatcher"), [])
                     )
             elif proc_type == "Dispatcher":
                 if nodetype == "sources":
-                    procinfos_for_string = list(
-                        _procinfos_by_ss_type.get((ss, "DataLogger"), [])
-                    )
+                    procinfos_for_string = [
+                        dl
+                        for dl in _procinfos_by_ss_type.get((ss, "DataLogger"), [])
+                        if _sends_to_default_pool(dl)
+                    ]
                     if not procinfo_subsystem_has_dataloggers:
                         procinfos_for_string.extend(
-                            _procinfos_by_ss_type.get((ss, "EventBuilder"), [])
+                            [
+                                eb
+                                for eb in _procinfos_by_ss_type.get(
+                                    (ss, "EventBuilder"), []
+                                )
+                                if _sends_to_default_pool(eb)
+                            ]
                         )
                     procinfos_for_string.sort(key=lambda p: p.rank)
 
         # Inter-subsystem EventBuilder connections
-        if proc_type == "EventBuilder" and (
-            inter_subsystem_transfer or nodetype == "sources"
+        if (
+            not explicit_destinations
+            and proc_type == "EventBuilder"
+            and (inter_subsystem_transfer or nodetype == "sources")
         ):
             if nodetype == "destinations":
                 procinfos_for_string.extend(_inter_ss_eb_destinations.get(ss, []))
@@ -554,6 +700,14 @@ def bookkeeping_for_fhicl_documents_artdaq_v3_base(self):
                 procinfos_for_string.extend(_inter_ss_eb_sources.get(ss, []))
             # Re-sort by rank to maintain original ordering
             procinfos_for_string.sort(key=lambda p: p.rank)
+
+        # An EventBuilder explicitly named as a destination also listens to
+        # whoever names it (in addition to its BoardReaders and any
+        # subsystem-level upstream EventBuilders)
+        if claimed_receiver and proc_type == "EventBuilder":
+            procinfos_for_string = _merge_by_rank(
+                procinfos_for_string, _claimed_senders[procinfo.label]
+            )
 
         nodes = []
 
@@ -778,6 +932,21 @@ def bookkeeping_for_fhicl_documents_artdaq_v3_base(self):
             def determine_if_inter_subsystem_transfer(
                 procinfo, table_name, table_searchstart
             ):
+                # Preferred: an explicit "inter_subsystem_transfer: true|false"
+                # key inside the output module block that holds this
+                # sources/destinations table. Any output module name works.
+                (block_start, block_end) = enclosing_table_range(
+                    procinfo.fhicl_used, table_name, table_searchstart
+                )
+                if block_start != -1:
+                    res = _RE_INTER_SUBSYSTEM_TRANSFER.search(
+                        procinfo.fhicl_used, block_start, block_end
+                    )
+                    if res:
+                        return res.group(1).lower() == "true"
+
+                # Fallback for older configurations: recognize the output
+                # module by one of the historically hardcoded names.
                 for enclosing_sender_table in [
                     "routingNetOutput",
                     "binaryNetOutput",
@@ -812,6 +981,20 @@ def bookkeeping_for_fhicl_documents_artdaq_v3_base(self):
                     )
                     != "message"
                 ):
+                    # Does the output module block holding this destinations
+                    # table name its receivers explicitly?
+                    explicit_labels = None
+                    if tablename == "destinations":
+                        # Anchor on the exact table location so a stray
+                        # "destinations" in a comment can't mislead us
+                        (block_start, block_end) = enclosing_table_range(
+                            self.procinfos[i_proc].fhicl_used, tablename, table_start
+                        )
+                        if block_start != -1:
+                            explicit_labels = parse_destination_labels(
+                                self.procinfos[i_proc].fhicl_used[block_start:block_end]
+                            )
+
                     self.procinfos[i_proc].fhicl_used = (
                         self.procinfos[i_proc].fhicl_used[:table_start]
                         + "\n"
@@ -822,6 +1005,7 @@ def bookkeeping_for_fhicl_documents_artdaq_v3_base(self):
                             tablename,
                             max_event_sizes[self.procinfos[i_proc].subsystem],
                             inter_subsystem_transfer,
+                            explicit_labels,
                         )
                         + "\n } \n"
                         + self.procinfos[i_proc].fhicl_used[table_end:]
@@ -1452,25 +1636,38 @@ def bookkeeping_for_fhicl_documents_artdaq_v3_base(self):
             if procinfo.subsystem != subsystem_id:
                 continue
 
-            if procinfo.name not in init_fragment_counts:
+            # Processes of one type in a subsystem normally share a count;
+            # a receiver claimed via destination_labels gets its own, since
+            # it may hear from a different set of senders.
+            claimed = _claimed_senders.get(procinfo.label, [])
+            count_key = procinfo.label if claimed else procinfo.name
+
+            if count_key not in init_fragment_counts:
 
                 possible_event_senders = []
                 init_fragment_count = 0
 
                 if procinfo.name == "EventBuilder":
+                    upstream_ebs = []
                     for ss_source in subsystem.sources:
-                        for possible_sender_procinfo in _procinfos_by_ss_name.get(
-                            (ss_source, "EventBuilder"), []
+                        upstream_ebs.extend(
+                            _procinfos_by_ss_name.get((ss_source, "EventBuilder"), [])
+                        )
+                    for possible_sender_procinfo in _merge_by_rank(
+                        upstream_ebs, claimed
+                    ):
+                        if sends_to_via_RootNetOutput(
+                            possible_sender_procinfo, procinfo
                         ):
-                            if sends_to_via_RootNetOutput(
-                                possible_sender_procinfo, procinfo
-                            ):
-                                init_fragment_count += art_analyzer_count(
-                                    possible_sender_procinfo
-                                )
+                            init_fragment_count += art_analyzer_count(
+                                possible_sender_procinfo
+                            )
                 elif procinfo.name == "DataLogger":
-                    for possible_sender_procinfo in _procinfos_by_ss_name.get(
-                        (procinfo.subsystem, "EventBuilder"), []
+                    for possible_sender_procinfo in _merge_by_rank(
+                        _procinfos_by_ss_name.get(
+                            (procinfo.subsystem, "EventBuilder"), []
+                        ),
+                        claimed,
                     ):
                         if sends_to_via_RootNetOutput(
                             possible_sender_procinfo, procinfo
@@ -1479,8 +1676,11 @@ def bookkeeping_for_fhicl_documents_artdaq_v3_base(self):
                                 possible_sender_procinfo
                             )
                 elif procinfo.name == "Dispatcher":
-                    for possible_sender_procinfo in _procinfos_by_ss_name.get(
-                        (procinfo.subsystem, "DataLogger"), []
+                    for possible_sender_procinfo in _merge_by_rank(
+                        _procinfos_by_ss_name.get(
+                            (procinfo.subsystem, "DataLogger"), []
+                        ),
+                        claimed,
                     ):
                         if sends_to_via_RootNetOutput(
                             possible_sender_procinfo, procinfo
@@ -1491,8 +1691,11 @@ def bookkeeping_for_fhicl_documents_artdaq_v3_base(self):
                     if (
                         init_fragment_count == 0
                     ):  # Dispatcher will _always_ receive init Fragments, this probably means we're running without DataLoggers
-                        for possible_sender_procinfo in _procinfos_by_ss_name.get(
-                            (procinfo.subsystem, "EventBuilder"), []
+                        for possible_sender_procinfo in _merge_by_rank(
+                            _procinfos_by_ss_name.get(
+                                (procinfo.subsystem, "EventBuilder"), []
+                            ),
+                            claimed,
                         ):
                             if sends_to_via_RootNetOutput(
                                 possible_sender_procinfo, procinfo
@@ -1501,10 +1704,10 @@ def bookkeeping_for_fhicl_documents_artdaq_v3_base(self):
                                     possible_sender_procinfo
                                 )
 
-                init_fragment_counts[procinfo.name] = init_fragment_count
+                init_fragment_counts[count_key] = init_fragment_count
 
             procinfo.fhicl_used = _RE_INIT_FRAG_COUNT.sub(
-                "init_fragment_count: %d" % init_fragment_counts[procinfo.name],
+                "init_fragment_count: %d" % init_fragment_counts[count_key],
                 procinfo.fhicl_used,
             )
 
