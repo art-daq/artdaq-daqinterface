@@ -616,7 +616,9 @@ def bookkeeping_for_fhicl_documents_artdaq_v3_base(self):
                     )
                     if not procinfo_subsystem_has_dataloggers:
                         procinfos_for_string.extend(
-                            _unclaimed(_procinfos_by_ss_type.get((ss, "Dispatcher"), []))
+                            _unclaimed(
+                                _procinfos_by_ss_type.get((ss, "Dispatcher"), [])
+                            )
                         )
                     procinfos_for_string.sort(key=lambda p: p.rank)
             elif proc_type == "DataLogger":
@@ -632,17 +634,21 @@ def bookkeeping_for_fhicl_documents_artdaq_v3_base(self):
                 if nodetype == "sources":
                     all_dls = _procinfos_by_ss_type.get((ss, "DataLogger"), [])
                     procinfos_for_string = [
-                        dl for dl in all_dls
+                        dl
+                        for dl in all_dls
                         if dl.label not in _sender_claimed_dests
                         or procinfo.label in _sender_claimed_dests[dl.label]
                     ]
                     if not procinfo_subsystem_has_dataloggers:
                         all_ebs = _procinfos_by_ss_type.get((ss, "EventBuilder"), [])
-                        procinfos_for_string.extend([
-                            eb for eb in all_ebs
-                            if eb.label not in _sender_claimed_dests
-                            or procinfo.label in _sender_claimed_dests[eb.label]
-                        ])
+                        procinfos_for_string.extend(
+                            [
+                                eb
+                                for eb in all_ebs
+                                if eb.label not in _sender_claimed_dests
+                                or procinfo.label in _sender_claimed_dests[eb.label]
+                            ]
+                        )
                     procinfos_for_string.sort(key=lambda p: p.rank)
 
         # Inter-subsystem EventBuilder connections
