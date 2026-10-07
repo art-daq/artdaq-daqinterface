@@ -465,44 +465,81 @@ def bookkeeping_for_fhicl_documents_artdaq_v3_base(self):
     #   destination_labels: [ "LabelA", "LabelB" ]
     # naming its receivers directly by boot-file label. Such receivers are
     # "claimed": they are removed from the default destination pool (so
-    # unflagged output modules in the same subsystem no longer send to
-    # them), and their sources table lists exactly the processes that name
-    # them. With no destination_labels anywhere, behavior is unchanged.
+    # unlabeled output modules no longer send to them), and their sources
+    # table lists exactly the processes that name them. Mixing is supported
+    # per output module: a process may route one labeled output explicitly
+    # while its other, unlabeled outputs keep the default routing -- such a
+    # process stays in the source lists of unclaimed receivers. With no
+    # destination_labels anywhere, behavior is unchanged.
     _procinfo_by_label = {pi.label: pi for pi in self.procinfos}
     _claimed_senders = {}  # receiver label -> list of sender procinfos
 
     def parse_destination_labels(fhicl_fragment):
-        labels = []
+        # None when no (uncommented) destination_labels key is present; a list
+        # otherwise. An empty list is meaningful: "explicitly no destinations".
+        labels = None
         for res in _RE_DESTINATION_LABELS.finditer(fhicl_fragment):
+            if labels is None:
+                labels = []
             for token in res.group(1).split(","):
                 token = token.strip().strip('"').strip("'").strip()
                 if token and token not in labels:
                     labels.append(token)
         return labels
 
-    for pi in self.procinfos:
-        for label in parse_destination_labels(pi.fhicl_used):
-            if label not in _procinfo_by_label:
-                raise Exception(
-                    make_paragraph(
-                        'Bookkeeping error: process %s names "%s" in a '
-                        "destination_labels list, but no artdaq process with "
-                        "that label exists in the boot file" % (pi.label, label)
-                    )
+    def destinations_block_labels(fhicl):
+        # One entry per non-"message" destinations table, located exactly the
+        # way the table-writing loop below locates them, so claims always
+        # match the destinations that get written. Note that
+        # enclosing_table_range() ends at the destinations table's opening
+        # brace: destination_labels must precede destinations in its block.
+        blocks = []
+        searchstart = 0
+        (table_start, table_end) = table_range(fhicl, "destinations")
+        while table_start != -1 and table_end != -1:
+            if enclosing_table_name(fhicl, "destinations", searchstart) != "message":
+                labels = None
+                (block_start, block_end) = enclosing_table_range(
+                    fhicl, "destinations", table_start
                 )
-            senders = _claimed_senders.setdefault(label, [])
-            if all(s.label != pi.label for s in senders):
-                senders.append(pi)
+                if block_start != -1:
+                    labels = parse_destination_labels(fhicl[block_start:block_end])
+                blocks.append(labels)
+            searchstart = table_end
+            (table_start, table_end) = table_range(fhicl, "destinations", searchstart)
+        return blocks
+
+    _explicit_senders = set()  # senders with at least one labeled output module
+    _default_output_senders = set()  # senders with at least one unlabeled one
+    for pi in self.procinfos:
+        for labels in destinations_block_labels(pi.fhicl_used):
+            if labels is None:
+                _default_output_senders.add(pi.label)
+                continue
+            _explicit_senders.add(pi.label)
+            for label in labels:
+                if label not in _procinfo_by_label:
+                    raise Exception(
+                        make_paragraph(
+                            'Bookkeeping error: process %s names "%s" in a '
+                            "destination_labels list, but no artdaq process with "
+                            "that label exists in the boot file" % (pi.label, label)
+                        )
+                    )
+                senders = _claimed_senders.setdefault(label, [])
+                if all(s.label != pi.label for s in senders):
+                    senders.append(pi)
     for label in _claimed_senders:
         _claimed_senders[label].sort(key=lambda p: p.rank)
 
-    # Reverse map: sender label -> set of receiver labels it claims.
-    # Used to filter unclaimed dispatchers' source lists so they don't
-    # include senders that exclusively target other receivers.
-    _sender_claimed_dests = {}
-    for recv_label, senders in _claimed_senders.items():
-        for s in senders:
-            _sender_claimed_dests.setdefault(s.label, set()).add(recv_label)
+    def _sends_to_default_pool(sender):
+        # Senders without any labeled output keep today's behavior; senders
+        # with labeled outputs still feed the default pool through their
+        # unlabeled output modules, if they have any.
+        return (
+            sender.label not in _explicit_senders
+            or sender.label in _default_output_senders
+        )
 
     def _unclaimed(procinfo_list):
         return [p for p in procinfo_list if p.label not in _claimed_senders]
@@ -616,33 +653,39 @@ def bookkeeping_for_fhicl_documents_artdaq_v3_base(self):
                     )
                     if not procinfo_subsystem_has_dataloggers:
                         procinfos_for_string.extend(
-                            _unclaimed(_procinfos_by_ss_type.get((ss, "Dispatcher"), []))
+                            _unclaimed(
+                                _procinfos_by_ss_type.get((ss, "Dispatcher"), [])
+                            )
                         )
                     procinfos_for_string.sort(key=lambda p: p.rank)
             elif proc_type == "DataLogger":
                 if nodetype == "sources":
-                    procinfos_for_string = list(
-                        _procinfos_by_ss_type.get((ss, "EventBuilder"), [])
-                    )
+                    procinfos_for_string = [
+                        eb
+                        for eb in _procinfos_by_ss_type.get((ss, "EventBuilder"), [])
+                        if _sends_to_default_pool(eb)
+                    ]
                 elif nodetype == "destinations":
                     procinfos_for_string = _unclaimed(
                         _procinfos_by_ss_type.get((ss, "Dispatcher"), [])
                     )
             elif proc_type == "Dispatcher":
                 if nodetype == "sources":
-                    all_dls = _procinfos_by_ss_type.get((ss, "DataLogger"), [])
                     procinfos_for_string = [
-                        dl for dl in all_dls
-                        if dl.label not in _sender_claimed_dests
-                        or procinfo.label in _sender_claimed_dests[dl.label]
+                        dl
+                        for dl in _procinfos_by_ss_type.get((ss, "DataLogger"), [])
+                        if _sends_to_default_pool(dl)
                     ]
                     if not procinfo_subsystem_has_dataloggers:
-                        all_ebs = _procinfos_by_ss_type.get((ss, "EventBuilder"), [])
-                        procinfos_for_string.extend([
-                            eb for eb in all_ebs
-                            if eb.label not in _sender_claimed_dests
-                            or procinfo.label in _sender_claimed_dests[eb.label]
-                        ])
+                        procinfos_for_string.extend(
+                            [
+                                eb
+                                for eb in _procinfos_by_ss_type.get(
+                                    (ss, "EventBuilder"), []
+                                )
+                                if _sends_to_default_pool(eb)
+                            ]
+                        )
                     procinfos_for_string.sort(key=lambda p: p.rank)
 
         # Inter-subsystem EventBuilder connections
@@ -948,11 +991,9 @@ def bookkeeping_for_fhicl_documents_artdaq_v3_base(self):
                             self.procinfos[i_proc].fhicl_used, tablename, table_start
                         )
                         if block_start != -1:
-                            found = parse_destination_labels(
+                            explicit_labels = parse_destination_labels(
                                 self.procinfos[i_proc].fhicl_used[block_start:block_end]
                             )
-                            if found:
-                                explicit_labels = found
 
                     self.procinfos[i_proc].fhicl_used = (
                         self.procinfos[i_proc].fhicl_used[:table_start]
