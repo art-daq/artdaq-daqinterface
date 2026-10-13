@@ -500,7 +500,7 @@ def bookkeeping_for_fhicl_documents_artdaq_v3_base(self):
             if enclosing_table_name(fhicl, "destinations", searchstart) != "message":
                 labels = None
                 (block_start, block_end) = enclosing_table_range(
-                    fhicl, "destinations", table_start
+                    fhicl, "destinations", searchstart
                 )
                 if block_start != -1:
                     labels = parse_destination_labels(fhicl[block_start:block_end])
@@ -985,10 +985,12 @@ def bookkeeping_for_fhicl_documents_artdaq_v3_base(self):
                     # table name its receivers explicitly?
                     explicit_labels = None
                     if tablename == "destinations":
-                        # Anchor on the exact table location so a stray
-                        # "destinations" in a comment can't mislead us
+                        # Find the enclosing output-module block so we can
+                        # read its destination_labels (if any).  Use searchstart
+                        # (before the destinations keyword) so enclosing_table_range
+                        # can see the opening brace of the output module.
                         (block_start, block_end) = enclosing_table_range(
-                            self.procinfos[i_proc].fhicl_used, tablename, table_start
+                            self.procinfos[i_proc].fhicl_used, tablename, searchstart
                         )
                         if block_start != -1:
                             explicit_labels = parse_destination_labels(
