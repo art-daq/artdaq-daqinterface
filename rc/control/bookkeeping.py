@@ -526,6 +526,19 @@ def bookkeeping_for_fhicl_documents_artdaq_v3_base(self):
                             "that label exists in the boot file" % (pi.label, label)
                         )
                     )
+                # Only DataLoggers and Dispatchers take their sources from the
+                # claims below; any other receiver would get a destination
+                # entry without a matching source entry.
+                target_type = _procinfo_by_label[label].name
+                if target_type not in ("DataLogger", "Dispatcher"):
+                    raise Exception(
+                        make_paragraph(
+                            'Bookkeeping error: process %s names "%s" (a %s) in a '
+                            "destination_labels list; only DataLogger and Dispatcher "
+                            "processes can be named there"
+                            % (pi.label, label, target_type)
+                        )
+                    )
                 senders = _claimed_senders.setdefault(label, [])
                 if all(s.label != pi.label for s in senders):
                     senders.append(pi)
